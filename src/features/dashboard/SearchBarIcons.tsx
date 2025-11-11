@@ -45,7 +45,7 @@ const SearchBarIcons: FC = () => {
       style={[
         {
           position: "fixed" as any,
-          top: 20,
+          top: 8,
           left: 10,
           zIndex: 1000,
           display: "flex",
