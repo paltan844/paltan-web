@@ -36,7 +36,7 @@ const ProductDashboard: React.FC = () => {
         // Auto-hide after 5 seconds
         hideTimeoutRef.current = setTimeout(() => {
           setShowBackToTop(false);
-        }, 1000);
+        }, 2000);
       } else if (currentScrollY > lastScrollY || currentScrollY < 200) {
         // Hide button near top or when scrolling down
         setShowBackToTop(false);
@@ -96,7 +96,7 @@ const ProductDashboard: React.FC = () => {
           pointerEvents: showBackToTop ? "auto" : "none",
           transform: showBackToTop
             ? "translateX(-50%) translateY(0)"
-            : "translateX(-50%) translateY(20px)",
+            : "translateX(-50%) translateY(-20px)",
         }}
       >
         <ArrowUp size={13} />
@@ -123,8 +123,9 @@ const styles: Record<string, CSSProperties> = {
   },
   backToTop: {
     position: "fixed",
-    bottom: 50,
+    top: 20,
     left: "50%",
+     transform: "translateX(-50%)", 
     backgroundColor: "#111",
     color: "#fff",
     border: "none",
