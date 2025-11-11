@@ -7,6 +7,7 @@ import ProductDashboard from "@features/dashboard/ProductDashboard";
 import CategoryList from "@features/dashboard/CategoryList";
 import Kart from "@features/profile/Kart";
 import Profile from "@features/profile/Profile";
+import { useAuthStore } from "@state/authStore";
 
 const MainTabs: React.FC = () => {
   const location = useLocation();
@@ -35,19 +36,35 @@ const MainTabs: React.FC = () => {
         </Routes>
       </div>
 
-      {/* ✅ Bottom Tab Bar — hidden on Profile */}
-      {!isProfileScreen && (
-        <nav className="tab-bar">
-          {tabItems.map((tab) => (
-            <Link key={tab.path} to={tab.path} className="tab-link">
-              <div className={`tab-item ${isActive(tab.path) ? "active" : ""}`}>
-                {tab.icon}
-                <span>{tab.label}</span>
-              </div>
-            </Link>
-          ))}
-        </nav>
-      )}
+{!isProfileScreen && (
+  <nav className="tab-bar">
+    {tabItems.map((tab) => {
+      const isKart = tab.path === "/kart";
+      const { user } = useAuthStore.getState();
+
+      return (
+        <Link
+          key={tab.path}
+          to={isKart && !user ? location.pathname : tab.path} // stay on same page if not logged in
+          onClick={(e) => {
+            if (isKart && !user) {
+              e.preventDefault(); // stop navigation
+              window.alert("Please login first to access your Kart.");
+            }
+          }}
+          className="tab-link"
+        >
+          <div className={`tab-item ${isActive(tab.path) ? "active" : ""}`}>
+            {tab.icon}
+            <span>{tab.label}</span>
+          </div>
+        </Link>
+      );
+    })}
+  </nav>
+)}
+
+
 
       {/* ✅ Styles */}
       <style>{`
