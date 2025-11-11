@@ -1,0 +1,25 @@
+{
+  "extends": "@react-native/typescript-config/tsconfig.json",
+  "compilerOptions": {
+     "lib": ["dom", "esnext"],
+    "jsx": "react-jsx",               // web ke liye 'react-native' → 'react-jsx'
+    "typeRoots": ["node_modules/@types", "src/types"],
+    "types": ["node","jest", "react", "react-native", "react-dom", "react-router-dom"], // web ke liye add 'react' aur 'react-dom'
+    "skipLibCheck": true,
+     "moduleResolution": "bundler",
+    "baseUrl": "./src/",
+    "paths": {
+      "@assets/*": ["assets/*"],
+      "@features/*": ["features/*"],
+      "@service/*": ["service/*"],
+      "@styles/*": ["styles/*"],
+      "@navigation/*": ["navigation/*"],
+      "@components/*": ["components/*"],
+      "@state/*": ["state/*"],
+      "@utils/*": ["utils/*"]
+    },
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["src", "App.tsx", "global.d.ts"]      // ensure App.tsx is included
+}

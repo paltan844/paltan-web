@@ -1,0 +1,174 @@
+
+import { View, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import React, { FC, useEffect, useRef } from 'react';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import CustomText from '@components/ui/CustomText';
+import { RFValue } from 'react-native-responsive-fontsize';
+import { useCartStore } from '@state/cartStore';
+
+interface FooterSidebarProps {
+    selectedCategory: any;
+    categories: any;
+    onCategoryPress: (category: any) => void;
+}
+
+
+const FooterSidebar: FC<FooterSidebarProps> = ({ selectedCategory, categories, onCategoryPress }) => {
+    const ScrollViewRef = useRef<ScrollView>(null);
+   const indicatorPosition = useSharedValue(0);
+   const animatedValues = categories?.map(() => useSharedValue(0));
+  const cart = useCartStore(state => state.cart);
+  const cartCount = cart.reduce((acc, item) => acc + item.count, 0);
+
+
+    useEffect(() => {
+        let targetIndex = -1;
+        categories?.forEach((category: any, index: number) => {
+            const isSelected = selectedCategory?._id === category?._id;
+            animatedValues[index].value = withTiming(isSelected ? 2 : -15, { duration: 500 });
+            if (isSelected) {targetIndex = index;}
+        });
+
+         if (targetIndex !== -1) {
+
+indicatorPosition.value = withTiming(targetIndex * 100 - 9, { duration: 500 });
+
+
+                    runOnJS(() => {
+                        ScrollViewRef.current?.scrollTo({
+                            y: targetIndex * 100,
+                            animated: true,
+                        });
+                    });
+                }
+            }, [selectedCategory]);
+
+ const indicatorStyle = useAnimatedStyle(() => ({
+        transform: [{ translateY: indicatorPosition.value }],
+    }));
+
+
+    return (
+            <View style={styles.sideBar}>
+<ScrollView
+    ref={ScrollViewRef}
+    contentContainerStyle={{ paddingBottom: 50 }}
+    showsVerticalScrollIndicator={false}
+     style={ cartCount > 0 && { marginBottom: 20 }}
+    >
+        <Animated.View style={[styles.indicator, indicatorStyle]} />
+                    <Animated.View>
+                    {categories?.map((category: any, index: number) => {
+         const animatedStyle = useAnimatedStyle(() => ({
+            bottom: animatedValues[index].value,
+         }));
+
+                        return (
+                            <TouchableOpacity
+                                key={index}
+                                activeOpacity={1}
+                                style={styles.categoryButton}
+                                onPress={() => onCategoryPress(category)}>
+                                <View
+                                    style={[
+                                        styles.imageContainer ,
+                                       selectedCategory?.id === category?._id && styles.selectedImageContainer]
+                                    }>
+                                    <Animated.Image
+                                        source={{ uri: category.image }}
+                                          style={[styles.image, animatedStyle]}
+                                    />
+                                </View>
+                                <CustomText
+                                    fontSize={RFValue(7)}
+                                    numberOfLines={2}
+                                    ellipsizeMode="tail"
+                                    style={{textAlign: 'center'}}>
+                                    {category?.name}
+                                </CustomText>
+                            </TouchableOpacity>
+                        );
+                    })}
+                    </Animated.View>
+                </ScrollView>
+                </View>
+    );
+};
+
+const styles = StyleSheet.create({
+    container: {
+        backgroundColor: 'white',
+        height: 79,
+    },
+    sideBar: {
+        width: '24%',
+        position: 'relative',
+        backgroundColor: 'rgba(185, 225, 206, 0.5)',
+        borderRightWidth: 0.8,
+        borderRightColor: '#eee',
+    },
+    categoryContainer: {
+        flexDirection: 'row',
+    },
+    categoryButton: {
+        width:'100%',
+         paddingVertical: 0,
+        padding: 10,
+        height: 100,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    image: {
+        width: '80%',
+        height: '80%',
+        resizeMode: 'contain',
+    },
+    imageContainer: {
+        borderRadius: 100,
+        height: '50%',
+        marginBottom: 10,
+        width: '75%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F3F4F7',
+        overflow: 'hidden',
+    },
+    selectedImageContainer: {
+        backgroundColor: '#CCFFDB',
+    },
+    indicator: {
+        backgroundColor: 'black',
+        position: 'absolute',
+        top: 10,
+        right:0,
+        height: 80,
+        width: 4,
+        borderTopLeftRadius: 15,
+        borderBottomLeftRadius: 15,
+       alignSelf:'center',
+    },
+    categoryText: {
+        textAlign: 'center',
+    },
+    content: {
+        flex: 1,
+        marginTop: 120,
+        backgroundColor: '#f7f7f7',
+    },
+    leftButton: {
+        position: 'absolute',
+        left: 1,
+        top: '60%',
+        transform: [{ translateY: -25 }],
+        zIndex: 15,
+    },
+    rightButton: {
+        position: 'absolute',
+        right: 1,
+        top: '60%',
+        transform: [{ translateY: -25 }],
+        zIndex: 15,
+    },
+});
+
+export default FooterSidebar;

@@ -1,0 +1,10 @@
+{
+  "name": "Paltan",
+  "displayName": "Paltan",
+  "expo": {
+    "platforms": ["ios", "android", "web"],
+    "web": {
+      "favicon": "./src/assets/icons/favicon.png"
+    }
+  }
+}
