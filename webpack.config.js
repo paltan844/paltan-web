@@ -2,10 +2,9 @@ const createExpoWebpackConfigAsync = require("@expo/webpack-config");
 const path = require("path");
 
 module.exports = async function (env, argv) {
-  // 🧩 Create default Expo Webpack config
   const config = await createExpoWebpackConfigAsync(env, argv);
 
-  // ✅ Add safer resolution + prevent Node-only modules
+  // ✅ 1. Safe aliases & fallbacks
   config.resolve = {
     ...config.resolve,
     alias: {
@@ -28,22 +27,31 @@ module.exports = async function (env, argv) {
     },
   };
 
-  // ✅ Patch: Define a fake window.localStorage during build
-  // This prevents "SecurityError: Cannot initialize local storage"
-  config.plugins.push({
+  // ✅ 2. Inject safe global polyfill BEFORE HtmlWebpackPlugin runs
+  config.plugins.unshift({
     apply: (compiler) => {
-      compiler.hooks.beforeRun.tap("SafeLocalStoragePatch", () => {
-        if (typeof global.window === "undefined") global.window = {};
-        if (typeof global.window.localStorage === "undefined") {
-          global.window.localStorage = {
-            getItem: () => null,
-            setItem: () => {},
-            removeItem: () => {},
-            clear: () => {},
-          };
+      compiler.hooks.beforeCompile.tap("InjectSafeLocalStorage", () => {
+        try {
+          if (typeof globalThis.localStorage === "undefined") {
+            globalThis.localStorage = {
+              getItem: () => null,
+              setItem: () => {},
+              removeItem: () => {},
+              clear: () => {},
+            };
+          }
+        } catch (e) {
+          console.warn("⚠️ Safe localStorage polyfill injected (Render build)");
         }
       });
     },
+  });
+
+  // ✅ 3. Prevent HtmlWebpackPlugin from evaluating inline JS that touches localStorage
+  config.plugins.forEach((plugin) => {
+    if (plugin.constructor && plugin.constructor.name === "HtmlWebpackPlugin") {
+      plugin.userOptions.scriptLoading = "blocking";
+    }
   });
 
   return config;
