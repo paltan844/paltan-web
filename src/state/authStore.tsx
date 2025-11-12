@@ -2,8 +2,24 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { mmkvStorage } from "./storage";
 
-const isBrowser = typeof window !== "undefined" && typeof localStorage !== "undefined";
+/* ------------------------------------------------------------------
+✅ A universal safe wrapper for localStorage — works in Node, Browser & Render builds
+------------------------------------------------------------------ */
+const isBrowser =
+  typeof window !== "undefined" && typeof localStorage !== "undefined";
 
+export const safeLocalStorage = isBrowser
+  ? localStorage
+  : {
+      getItem: (_key: string) => null,
+      setItem: (_key: string, _value: string) => {},
+      removeItem: (_key: string) => {},
+      clear: () => {},
+    };
+
+/* ------------------------------------------------------------------
+✅ Auth Store (Zustand)
+------------------------------------------------------------------ */
 interface AuthStore {
   user: Record<string, any> | null;
   currentOrder: Record<string, any> | null;
@@ -29,58 +45,40 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       logout: () => {
-        console.log("🔴 [Logout Triggered] — clearing Zustand + localStorage...");
+        console.log("🔴 [Logout Triggered] — clearing Zustand + storages...");
 
-        // Clear Zustand in-memory state
+        // ✅ Clear Zustand in-memory state
         set({ user: null, currentOrder: null });
 
         try {
-          if (isBrowser) {
-            // Clear persisted Zustand data
-            localStorage.removeItem("auth-storage");
-            console.log("🧹 localStorage: auth-storage removed ✅");
+          // ✅ Safe clear (no crash on Render build)
+          safeLocalStorage.removeItem("auth-storage");
+          console.log("🧹 localStorage cleared ✅");
 
-            // Clear session
+          mmkvStorage.clearAll();
+          console.log("🧹 mmkvStorage cleared ✅");
+
+          if (isBrowser) {
             sessionStorage.clear();
             console.log("🧹 sessionStorage cleared ✅");
           }
-
-          // Clear MMKV backup
-          mmkvStorage.clearAll();
-          console.log("🧹 mmkvStorage cleared ✅");
         } catch (error) {
           console.warn("⚠️ Logout error:", error);
         }
 
-        console.log("✅ Logout complete — Zustand user state should be null:", get().user);
+        console.log(
+          "✅ Logout complete — Zustand user state should be null:",
+          get().user
+        );
       },
     }),
     {
       name: "auth-storage",
-      storage: createJSONStorage(() =>
-        isBrowser
-          ? {
-              getItem: (key) => {
-                const value = localStorage.getItem(key);
-                console.log("📥 getItem:", key, value);
-                return value;
-              },
-              setItem: (key, value) => {
-                console.log("📤 setItem:", key, value);
-                localStorage.setItem(key, value);
-              },
-              removeItem: (key) => {
-                console.log("🗑️ removeItem:", key);
-                localStorage.removeItem(key);
-              },
-            }
-          : {
-              // Fallback for server-side (Render build)
-              getItem: () => null,
-              setItem: () => {},
-              removeItem: () => {},
-            }
-      ),
+      storage: createJSONStorage(() => ({
+        getItem: (key) => safeLocalStorage.getItem(key),
+        setItem: (key, value) => safeLocalStorage.setItem(key, value),
+        removeItem: (key) => safeLocalStorage.removeItem(key),
+      })),
     }
   )
 );
