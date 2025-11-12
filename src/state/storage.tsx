@@ -1,62 +1,50 @@
-// ✅ Safe browser detection (important for Render builds)
-const isBrowser = typeof window !== "undefined" && typeof localStorage !== "undefined";
-
-// ✅ tokenStorage — web safe
+// storage.ts (Web Compatible)
+// ✅ tokenStorage (for web)
 export const tokenStorage = {
   setString: (key: string, value: string) => {
-    if (isBrowser) localStorage.setItem(key, value);
+    localStorage.setItem(key, value);
   },
   getString: (key: string) => {
-    return isBrowser ? localStorage.getItem(key) : null;
+    return localStorage.getItem(key);
   },
   delete: (key: string) => {
-    if (isBrowser) localStorage.removeItem(key);
+    localStorage.removeItem(key);
   },
   clearAll: () => {
-    if (isBrowser) {
-      console.log("🧹 tokenStorage.clearAll() called");
-      localStorage.clear();
-    }
+    console.log("🧹 tokenStorage.clearAll() called");
+    localStorage.clear();
   },
 };
 
-// ✅ mmkvStorage — fallbacks for server-side (Render build)
-export const mmkvStorage = isBrowser
-  ? {
-      setItem: (key: string, value: string) => {
-        localStorage.setItem(key, value);
-      },
-      getItem: (key: string) => {
-        const value = localStorage.getItem(key);
-        return value ?? null;
-      },
-      removeItem: (key: string) => {
-        localStorage.removeItem(key);
-      },
-      addOnValueChangedListener: (callback: (key: string) => void) => {
-        const listener = (event: StorageEvent) => {
-          if (event.key) callback(event.key);
-        };
-        window.addEventListener("storage", listener);
-        return {
-          remove: () => window.removeEventListener("storage", listener),
-        };
-      },
-      clearAll: () => {
-        localStorage.clear();
-      },
-    }
-  : {
-      // Fallback when no window/localStorage (Render build)
-      setItem: () => {},
-      getItem: () => null,
-      removeItem: () => {},
-      addOnValueChangedListener: () => ({ remove: () => {} }),
-      clearAll: () => {},
-    };
 
-// ✅ Address helpers
-const ADDRESS_KEY = "savedAddresses";
+// ✅ mmkvStorage (generic key-value storage)
+export const mmkvStorage = {
+  setItem: (key: string, value: string) => {
+    localStorage.setItem(key, value);
+  },
+  getItem: (key: string) => {
+    const value = localStorage.getItem(key);
+    return value ?? null;
+  },
+  removeItem: (key: string) => {
+    localStorage.removeItem(key);
+  },
+  addOnValueChangedListener: (callback: (key: string) => void) => {
+    const listener = (event: StorageEvent) => {
+      if (event.key) callback(event.key);
+    };
+    window.addEventListener('storage', listener);
+    return {
+      remove: () => window.removeEventListener('storage', listener),
+    };
+  },
+  clearAll: () => {
+    localStorage.clear();
+  },
+};
+
+// ✅ Address helpers (same as before)
+const ADDRESS_KEY = 'savedAddresses';
 
 export const saveAddresses = (addresses: string[]) => {
   mmkvStorage.setItem(ADDRESS_KEY, JSON.stringify(addresses));
