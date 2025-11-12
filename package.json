@@ -10,7 +10,8 @@
     "test": "jest",
     "postinstall": "npx patch-package",
     "create-apk": "cd android && ./gradlew assembleRelease",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build:web": "EXPO_WEBPACK_CONFIG=./webpack.config.js npx expo export:web"
   },
   "browser": {
     "axios": "axios/dist/esm/axios.js"
