@@ -11,11 +11,10 @@ import SearchResults from "./SearchResult";
 import Skeleton from "./Skeleton";
 import { useDashboardStore } from "@state/dashboardStore";
 
+/* ------------------ Types ------------------ */
 export type ContentRef = {
   reload: () => void;
-  scrollRef: React.RefObject<HTMLDivElement>; // ✅ added this line
 };
-
 
 const ContentComponent = forwardRef<ContentRef>((_props, ref) => {
   const {
@@ -29,11 +28,10 @@ const ContentComponent = forwardRef<ContentRef>((_props, ref) => {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
- useImperativeHandle(ref, () => ({
-  reload: () => reloadDashboard(),
-  scrollRef, // ✅ expose scrollRef to parent
-}));
-
+  /* ✅ Expose reload function to parent via ref */
+  useImperativeHandle(ref, () => ({
+    reload: () => reloadDashboard(),
+  }));
 
   /* ✅ Fetch dashboard data on mount */
   useEffect(() => {
@@ -160,4 +158,4 @@ const styles: Record<string, React.CSSProperties> = {
 
 ContentComponent.displayName = "Content";
 
-export default memo(ContentComponent);
+export default memo(ContentComponent); 
