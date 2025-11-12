@@ -10,7 +10,6 @@ export const tokenStorage = {
     localStorage.removeItem(key);
   },
   clearAll: () => {
-    console.log("🧹 tokenStorage.clearAll() called");
     localStorage.clear();
   },
 };
