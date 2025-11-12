@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { mmkvStorage } from "./storage";
 
+const isBrowser = typeof window !== "undefined" && typeof localStorage !== "undefined";
+
 interface AuthStore {
   user: Record<string, any> | null;
   currentOrder: Record<string, any> | null;
@@ -33,20 +35,19 @@ export const useAuthStore = create<AuthStore>()(
         set({ user: null, currentOrder: null });
 
         try {
-          // Clear persisted Zustand data
-          localStorage.removeItem("auth-storage");
-          console.log("🧹 localStorage: auth-storage removed ✅");
+          if (isBrowser) {
+            // Clear persisted Zustand data
+            localStorage.removeItem("auth-storage");
+            console.log("🧹 localStorage: auth-storage removed ✅");
 
-          // Clear session
-          sessionStorage.clear();
-          console.log("🧹 sessionStorage cleared ✅");
+            // Clear session
+            sessionStorage.clear();
+            console.log("🧹 sessionStorage cleared ✅");
+          }
 
           // Clear MMKV backup
           mmkvStorage.clearAll();
           console.log("🧹 mmkvStorage cleared ✅");
-
-          // Debug log of remaining localStorage keys
-          console.log("📦 Remaining localStorage keys:", Object.keys(localStorage));
         } catch (error) {
           console.warn("⚠️ Logout error:", error);
         }
@@ -56,21 +57,30 @@ export const useAuthStore = create<AuthStore>()(
     }),
     {
       name: "auth-storage",
-      storage: createJSONStorage(() => ({
-        getItem: (key) => {
-          const value = localStorage.getItem(key);
-          console.log("📥 getItem:", key, value);
-          return value;
-        },
-        setItem: (key, value) => {
-          console.log("📤 setItem:", key, value);
-          localStorage.setItem(key, value);
-        },
-        removeItem: (key) => {
-          console.log("🗑️ removeItem:", key);
-          localStorage.removeItem(key);
-        },
-      })),
+      storage: createJSONStorage(() =>
+        isBrowser
+          ? {
+              getItem: (key) => {
+                const value = localStorage.getItem(key);
+                console.log("📥 getItem:", key, value);
+                return value;
+              },
+              setItem: (key, value) => {
+                console.log("📤 setItem:", key, value);
+                localStorage.setItem(key, value);
+              },
+              removeItem: (key) => {
+                console.log("🗑️ removeItem:", key);
+                localStorage.removeItem(key);
+              },
+            }
+          : {
+              // Fallback for server-side (Render build)
+              getItem: () => null,
+              setItem: () => {},
+              removeItem: () => {},
+            }
+      ),
     }
   )
 );
