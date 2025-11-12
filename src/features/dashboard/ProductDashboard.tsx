@@ -16,43 +16,58 @@ const ProductDashboard: React.FC = () => {
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const contentRef = useRef<ContentRef>(null);
 
+
   useEffect(() => {
     fetchBanners();
   }, [fetchBanners]);
 
+
   useEffect(() => {
-    let lastScrollY = window.scrollY;
+    const scrollContainer = contentRef.current?.scrollRef?.current;
+    if (!scrollContainer) return;
+
+    let lastScrollTop = 0;
 
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+      const scrollTop = scrollContainer.scrollTop;
 
-      if (currentScrollY < lastScrollY && currentScrollY > 200) {
+      if (scrollTop < lastScrollTop && scrollTop > 200) {
+        // Scrolling up
         setShowBackToTop(true);
+
         if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
         hideTimeoutRef.current = setTimeout(() => {
           setShowBackToTop(false);
-        }, 1000);
-      } else if (currentScrollY > lastScrollY || currentScrollY < 200) {
+        }, 2000);
+      } else if (scrollTop > lastScrollTop || scrollTop < 200) {
         setShowBackToTop(false);
       }
 
-      lastScrollY = currentScrollY;
+      lastScrollTop = scrollTop;
     };
 
-    window.addEventListener("scroll", handleScroll);
+    scrollContainer.addEventListener("scroll", handleScroll);
+
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      scrollContainer.removeEventListener("scroll", handleScroll);
       if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
     };
-  }, []);
+  }, [contentRef.current]);
 
+  // ✅ Smooth scroll to top
   const backToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const scrollContainer = contentRef.current?.scrollRef?.current;
+    if (scrollContainer) {
+      scrollContainer.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
     setShowBackToTop(false);
   };
 
   const reloadAll = () => reloadBanners();
 
+  // ✅ Combine with Network handler
   const ContentWithNetwork = withNetworkHandler(
     ({ onRetry }: { onRetry: () => void }) => (
       <div style={styles.contentContainer}>
@@ -66,7 +81,7 @@ const ProductDashboard: React.FC = () => {
             <Content ref={contentRef} />
             <footer style={styles.footer}>
               <p style={styles.footerMain}>Sab Milta Hai Online 💙</p>
-              <p style={styles.footerCredit}>Developed by Paltan Team</p>
+              <p style={styles.footerCredit}>Developed By Paltan Team</p>
             </footer>
           </>
         )}
@@ -80,6 +95,8 @@ const ProductDashboard: React.FC = () => {
       <AnimatedHeader />
       <SearchBarIcons />
       <ContentWithNetwork onRetry={reloadAll} />
+
+      {/* ✅ Floating Back-to-Top Button */}
       <button
         onClick={backToTop}
         style={{
@@ -88,7 +105,7 @@ const ProductDashboard: React.FC = () => {
           pointerEvents: showBackToTop ? "auto" : "none",
           transform: showBackToTop
             ? "translateX(-50%) translateY(0)"
-            : "translateX(-50%) translateY(20px)",
+            : "translateX(-50%) translateY(-10px)",
         }}
       >
         <ArrowUp size={13} />
@@ -98,6 +115,7 @@ const ProductDashboard: React.FC = () => {
   );
 };
 
+/* ✅ Styles */
 const styles: Record<string, CSSProperties> = {
   wrapper: {
     display: "flex",
@@ -114,8 +132,9 @@ const styles: Record<string, CSSProperties> = {
   },
   backToTop: {
     position: "fixed",
-    bottom: 50,
+    top: 20,
     left: "50%",
+    transform: "translateX(-50%)",
     backgroundColor: "#111",
     color: "#fff",
     border: "none",
