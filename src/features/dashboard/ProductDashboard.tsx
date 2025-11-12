@@ -16,52 +16,61 @@ const ProductDashboard: React.FC = () => {
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const contentRef = useRef<ContentRef>(null);
 
+
   useEffect(() => {
     fetchBanners();
   }, [fetchBanners]);
 
+
   useEffect(() => {
-    let lastScrollY = window.scrollY;
+    const scrollContainer = contentRef.current?.scrollRef?.current;
+    if (!scrollContainer) return;
+
+    let lastScrollTop = 0;
 
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+      const scrollTop = scrollContainer.scrollTop;
 
-      // Show button when scrolling up
-      if (currentScrollY < lastScrollY && currentScrollY > 200) {
+      if (scrollTop < lastScrollTop && scrollTop > 200) {
+        // Scrolling up
         setShowBackToTop(true);
 
-        // Clear old timeout (if user scrolls again)
         if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
-
-        // Auto-hide after 5 seconds
         hideTimeoutRef.current = setTimeout(() => {
           setShowBackToTop(false);
         }, 2000);
-      } else if (currentScrollY > lastScrollY || currentScrollY < 200) {
-        // Hide button near top or when scrolling down
+      } else if (scrollTop > lastScrollTop || scrollTop < 200) {
         setShowBackToTop(false);
       }
 
-      lastScrollY = currentScrollY;
+      lastScrollTop = scrollTop;
     };
 
-    window.addEventListener("scroll", handleScroll);
+    scrollContainer.addEventListener("scroll", handleScroll);
+
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      scrollContainer.removeEventListener("scroll", handleScroll);
       if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
     };
-  }, []);
+  }, [contentRef.current]);
 
+  // ✅ Smooth scroll to top
   const backToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const scrollContainer = contentRef.current?.scrollRef?.current;
+    if (scrollContainer) {
+      scrollContainer.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
     setShowBackToTop(false);
   };
 
   const reloadAll = () => reloadBanners();
 
+  // ✅ Combine with Network handler
   const ContentWithNetwork = withNetworkHandler(
     ({ onRetry }: { onRetry: () => void }) => (
-      <div style={styles.contentContainergg}>
+      <div style={styles.contentContainer}>
         {loading ? (
           <BannerSkeleton />
         ) : banners.length === 0 ? (
@@ -71,7 +80,7 @@ const ProductDashboard: React.FC = () => {
             <NoticeBanner items={banners} />
             <Content ref={contentRef} />
             <footer style={styles.footer}>
-              <p style={styles.footerMain}>Sab Milta Hai Online💙</p>
+              <p style={styles.footerMain}>Sab Milta Hai Online 💙</p>
               <p style={styles.footerCredit}>Developed By Paltan Team</p>
             </footer>
           </>
@@ -87,7 +96,7 @@ const ProductDashboard: React.FC = () => {
       <SearchBarIcons />
       <ContentWithNetwork onRetry={reloadAll} />
 
-      {/* ✅ Floating Back-to-Top Button (Auto-hide after 5s) */}
+      {/* ✅ Floating Back-to-Top Button */}
       <button
         onClick={backToTop}
         style={{
@@ -96,7 +105,7 @@ const ProductDashboard: React.FC = () => {
           pointerEvents: showBackToTop ? "auto" : "none",
           transform: showBackToTop
             ? "translateX(-50%) translateY(0)"
-            : "translateX(-50%) translateY(-20px)",
+            : "translateX(-50%) translateY(-10px)",
         }}
       >
         <ArrowUp size={13} />
@@ -125,7 +134,7 @@ const styles: Record<string, CSSProperties> = {
     position: "fixed",
     top: 20,
     left: "50%",
-     transform: "translateX(-50%)", 
+    transform: "translateX(-50%)",
     backgroundColor: "#111",
     color: "#fff",
     border: "none",
