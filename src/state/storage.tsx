@@ -1,5 +1,4 @@
-// storage.ts (Web Compatible)
-// ✅ tokenStorage (for web)
+
 export const tokenStorage = {
   setString: (key: string, value: string) => {
     localStorage.setItem(key, value);
@@ -16,8 +15,6 @@ export const tokenStorage = {
   },
 };
 
-
-// ✅ mmkvStorage (generic key-value storage)
 export const mmkvStorage = {
   setItem: (key: string, value: string) => {
     localStorage.setItem(key, value);
@@ -43,7 +40,6 @@ export const mmkvStorage = {
   },
 };
 
-// ✅ Address helpers (same as before)
 const ADDRESS_KEY = 'savedAddresses';
 
 export const saveAddresses = (addresses: string[]) => {
