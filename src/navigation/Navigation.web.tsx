@@ -30,8 +30,8 @@ const Navigation = () => {
         <Route path="/share" element={<ShareScreen />} />
         <Route path="/aboutpaltan" element={<AboutPaltan />} />
         <Route path="/searchscreen" element={<SearchScreen />} />
-        <Route path="/productcategory" element={<ProductCategory />} />
-        <Route path="/productcategories" element={<ProductCategories />} />
+         <Route path="/productcategory/:id" element={<ProductCategory />} />
+          <Route path="/productcategories/:id" element={<ProductCategories />} />
         <Route path="/customerlogin" element={<CustomerLogin />} />
         <Route path="/LegalInformationScreen" element={<LegalInformationScreen />} />
         <Route path="/order-success" element={<OrderSuccess />} />
