@@ -48,7 +48,7 @@ const FooterSidebar: React.FC<FooterSidebarProps> = ({
         background: "rgba(193, 208, 200, 0.45)",
         borderRight: "1px solid #e5e5e5",
         overflowY: "auto",
-        padding: "4px 0 40px 0",
+        padding: "4px 0 60px 0",
         scrollBehavior: "smooth",
         zIndex: 100,
         transform: "translateZ(0)", // prevents flicker
