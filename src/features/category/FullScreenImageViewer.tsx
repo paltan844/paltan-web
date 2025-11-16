@@ -1,4 +1,4 @@
-/*
+
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -11,6 +11,7 @@ import {
   Pressable,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { X } from "lucide-react"; 
 
 const { width, height } = Dimensions.get('window');
 
@@ -66,9 +67,11 @@ const FullScreenImageViewer: React.FC<FullScreenImageViewerProps> = ({
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.modalBackground}>
-        <Pressable style={styles.closeBtn} onPress={onClose}>
-          <Icon name="close" size={30} color="#fff" />
+        
+                <Pressable style={styles.closeBtn} onPress={onClose}>
+          <X size={24} color="#fff" strokeWidth={2.5} />
         </Pressable>
+
 
         <FlatList
           ref={imageSliderRef}
@@ -164,8 +167,10 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FullScreenImageViewer;  */
+export default FullScreenImageViewer;  
 
+
+/*
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -235,12 +240,12 @@ const FullScreenImageViewer: React.FC<FullScreenImageViewerProps> = ({
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.modalBackground}>
         
-        {/* CLOSE BUTTON TOP RIGHT */}
+        {/* CLOSE BUTTON TOP RIGHT /}
         <Pressable style={styles.closeBtn} onPress={onClose}>
           <X size={24} color="#fff" strokeWidth={2.5} />
         </Pressable>
 
-        {/* MAIN FULLSCREEN SLIDER */}
+        {/* MAIN FULLSCREEN SLIDER /}
         <FlatList
           ref={imageSliderRef}
           data={images}
@@ -264,7 +269,7 @@ const FullScreenImageViewer: React.FC<FullScreenImageViewerProps> = ({
           )}
         />
 
-        {/* THUMBNAILS BELOW */}
+        {/* THUMBNAILS BELOW /}
         <View style={styles.thumbnailContainer}>
           <FlatList
             ref={flatListRef}
@@ -342,5 +347,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FullScreenImageViewer;
+export default FullScreenImageViewer;  */
 
