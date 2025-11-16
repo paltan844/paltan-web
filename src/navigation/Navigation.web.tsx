@@ -26,7 +26,7 @@ const Navigation = () => {
         {/* ✅ All main tab routes handled inside MainTabs /}
         <Route path="/*" element={<MainTabs />} />
 
-        {/* ✅ Other app-level routes */}
+        {/* ✅ Other app-level routes /}
         <Route path="/customersupport" element={<CustomerSupport />} />
         <Route path="/share" element={<ShareScreen />} />
         <Route path="/aboutpaltan" element={<AboutPaltan />} />
