@@ -993,13 +993,7 @@ useEffect(() => {
 ))}
             </>
           )}
-           <View style={styles.containers}>
-      {isLoading ? (
-        <ActivityIndicator color={Colors.primary} size="large" />
-      ) : (
-        <ProductList data={products} />
-      )}
-    </View>
+        
         </ScrollView>
 
         {fullScreenVisible && (
