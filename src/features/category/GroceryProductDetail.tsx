@@ -998,14 +998,6 @@ const GroceryProductDetail = () => {
               </>
             )}
 
-            {/* --- PRODUCT LIST BELOW --- */}
-            <View style={styles.containers}>
-              {isLoading ? (
-                <ActivityIndicator color={Colors.primary} size="large" />
-              ) : (
-                <ProductList data={products} />
-              )}
-            </View>
           </ScrollView>
 
           {/* --- FULL SCREEN IMAGE VIEWER --- */}
