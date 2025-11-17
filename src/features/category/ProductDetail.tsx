@@ -488,7 +488,7 @@ const ProductDetail = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [isLoading, isSetLoading] = useState<boolean>(true);
 
-  const [showDetails, setShowDetails] = useState(false);
+  const [showDetails, setShowDetails] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [fullScreenVisible, setFullScreenVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
