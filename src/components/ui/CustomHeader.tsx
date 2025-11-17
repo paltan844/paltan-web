@@ -20,7 +20,7 @@ interface CustomHeaderProps {
 
 const CustomHeader: FC<CustomHeaderProps> = ({ title, search }) => {
   return (
-    <SafeAreaView>
+    <>
       <CustomStatusBar />
       <View style={styles.flexRow}>
         {/* Back Button */}
@@ -56,7 +56,7 @@ const CustomHeader: FC<CustomHeaderProps> = ({ title, search }) => {
           )}
         </View>
       </View>
-    </SafeAreaView>
+    </>
   );
 };
 
