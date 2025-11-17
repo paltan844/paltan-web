@@ -147,6 +147,7 @@ import EmptyProductListFooter from "./EmptyProductListFooter";
 import SidebarSkeleton from "./SidebarSkeleton";
 import NoConnectionScreen from "@components/common/NetworkHandler";
 import { withNetworkHandlerWithHeader } from "@components/common/withNetworkHandler";
+import ProductLoader from "./ProductLoader";
 
 interface Props {
   isConnected?: boolean;
@@ -228,7 +229,7 @@ const matched = data.find(
 
           <View style={styles.productsContainer}>
             {productsLoading ? (
-       <ProductListSkeleton dummyData={[1,2,3,4,5,6]} />
+              <ProductLoader />
             ) : products.length > 0 ? (
               <ProductList data={products} categoryId={selectedCategory?._id} />
             ) : showEmptyFooter ? (
