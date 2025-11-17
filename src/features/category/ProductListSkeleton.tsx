@@ -56,7 +56,7 @@ export default ProductListSkeleton;  */
 import { FlatList, StyleSheet, View } from 'react-native';
 import React from 'react';
 
-const ProductListSkeleton = ({ dummyData = [1, 2, 3, 4, 5, 6] }) => {
+const ProductListSkeleton = ({ dummyData = [1, 2, 3, 4, 5, 6,7,8,9,10] }) => {
 
   const renderSkeletonCard = () => (
     <View style={styles.card}>
