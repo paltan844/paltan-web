@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderBottomWidth: 0.6,
     borderColor: Colors.border,
-     position: "sticky",
+  //   position: "sticky",
     top: 0,
    // zIndex: 9999,
   },
