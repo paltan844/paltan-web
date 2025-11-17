@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
      position: "sticky",
     top: 0,
-    zIndex: 9999,
+   // zIndex: 9999,
   },
   text: {
     textAlign: "center",
