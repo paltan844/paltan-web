@@ -70,7 +70,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderBottomWidth: 0.6,
     borderColor: Colors.border,
-    zIndex: 1,
+     position: "sticky",
+    top: 0,
+    zIndex: 9999,
   },
   text: {
     textAlign: "center",
