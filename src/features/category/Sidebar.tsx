@@ -54,7 +54,7 @@ useEffect(() => {
         borderBottom: "1px solid #eee",
         padding: "1px 1px",
         position: "sticky",
-        top: 60,
+        top: 70,
         zIndex: 50,
       }}
     >
