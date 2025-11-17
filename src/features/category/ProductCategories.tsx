@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   },
   subContainer: {
     flex: 1,
-  //   flexDirection: "row",
+     flexDirection: "row",
   },
   center: {
     color: "blue",
