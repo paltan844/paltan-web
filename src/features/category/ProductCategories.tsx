@@ -266,7 +266,6 @@ const styles = StyleSheet.create({
 export default withNetworkHandlerWithHeader(WithCart(ProductCategories));
 */
 
-
 import { View, StyleSheet } from "react-native";
 import React, { FC, useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
@@ -346,9 +345,20 @@ const ProductCategories: FC<Props> = ({ isConnected, onRetry }) => {
     }
   }, [selectedCategory]);
 
-  return (
-    <View style={styles.mainContainer}>
+ return (
+  <View style={styles.mainContainer}>
+    
+    {/* WEB-ONLY STICKY HEADER */}
+    <div
+      style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 9999,
+        background: "white",
+      }}
+    >
       <CustomHeader title={selectedCategory?.name || "Categories"} search />
+    </div>
 
       {!isConnected ? (
         <NoConnectionScreen onRetry={onRetry || fetchCategories} />
@@ -419,5 +429,6 @@ const styles = StyleSheet.create({
 });
 
 export default withNetworkHandlerWithHeader(WithCart(ProductCategories));
+
 
 
