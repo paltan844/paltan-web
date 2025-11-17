@@ -265,6 +265,12 @@ const styles = StyleSheet.create({
 
 export default withNetworkHandlerWithHeader(WithCart(ProductCategories));
 */
+
+
+
+
+
+
 import { View, StyleSheet } from "react-native";
 import React, { FC, useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
@@ -350,7 +356,7 @@ const ProductCategories: FC<Props> = ({ isConnected, onRetry }) => {
     {/* WEB-ONLY STICKY HEADER */}
     <div
       style={{
-        position: "sticky",
+        position: "fixed",
         top: 0,
         zIndex: 9999,
         background: "white",
@@ -423,6 +429,7 @@ const styles = StyleSheet.create({
   subContainer: {
     flexDirection: "column",
     flex: 1,
+    paddingTop: 60,
   },
 
   // ⭐ Sidebar full-width
@@ -442,6 +449,5 @@ const styles = StyleSheet.create({
 });
 
 export default withNetworkHandlerWithHeader(WithCart(ProductCategories));
-
 
 
