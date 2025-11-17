@@ -228,7 +228,7 @@ const matched = data.find(
 
           <View style={styles.productsContainer}>
             {productsLoading ? (
-              <ProductListSkeleton />
+       <ProductListSkeleton dummyData={[1,2,3,4,5,6]} />
             ) : products.length > 0 ? (
               <ProductList data={products} categoryId={selectedCategory?._id} />
             ) : showEmptyFooter ? (
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   },
   subContainer: {
     flex: 1,
-     flexDirection: "row",
+  //   flexDirection: "row",
   },
   center: {
     color: "blue",
