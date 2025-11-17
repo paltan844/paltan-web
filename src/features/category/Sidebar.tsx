@@ -53,7 +53,7 @@ useEffect(() => {
         background: "rgba(193,208,200,0.5)",
         borderBottom: "1px solid #eee",
         padding: "1px 1px",
-        //position: "sticky",
+        position: "sticky",
         top: 60,
         zIndex: 50,
       }}
