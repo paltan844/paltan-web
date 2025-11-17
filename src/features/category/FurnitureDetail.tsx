@@ -662,7 +662,7 @@ const FurnitureDetail = () => {
 
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [showDetails, setShowDetails] = useState(false);
+  const [showDetails, setShowDetails] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [fullScreenVisible, setFullScreenVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
