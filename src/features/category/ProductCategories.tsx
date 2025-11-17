@@ -265,7 +265,6 @@ const styles = StyleSheet.create({
 
 export default withNetworkHandlerWithHeader(WithCart(ProductCategories));
 */
-
 import { View, StyleSheet } from "react-native";
 import React, { FC, useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
@@ -365,20 +364,34 @@ const ProductCategories: FC<Props> = ({ isConnected, onRetry }) => {
       ) : (
         <View style={styles.subContainer}>
 
-          {/* ------- TOP SIDEBAR (FULL WIDTH) ------- */}
-          {categoriesLoading ? (
-            <View style={styles.sidebarWrapper}>
-              <SidebarSkeleton />
-            </View>
-          ) : (
-            <View style={styles.sidebarWrapper}>
-              <Sidebar
-                categories={categories}
-                selectedCategory={selectedCategory}
-                onCategoryPress={(category: any) => setSelectedCategory(category)}
-              />
-            </View>
-          )}
+        {categoriesLoading ? (
+  <div
+    style={{
+      position: "sticky",
+      top: 60,
+      zIndex: 50,
+      width: "100%",
+    }}
+  >
+    <SidebarSkeleton />
+  </div>
+) : (
+  <div
+    style={{
+      position: "sticky",
+      top: 60,
+      zIndex: 50,
+      width: "100%",
+    }}
+  >
+    <Sidebar
+      categories={categories}
+      selectedCategory={selectedCategory}
+      onCategoryPress={(category: any) => setSelectedCategory(category)}
+    />
+  </div>
+)}
+
 
           {/* ------- PRODUCTS SECTION (FULL WIDTH) ------- */}
           <View style={styles.productsContainer}>
