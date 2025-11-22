@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     backgroundColor: Colors.backgroundSecondary,
     padding: 10,
-    paddingBottom: 180,
+    paddingBottom: 215,
   },
   cancellationContainer: {
   backgroundColor: "#fff",
