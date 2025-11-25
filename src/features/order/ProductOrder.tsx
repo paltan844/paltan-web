@@ -2,7 +2,6 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  Image,
   TouchableOpacity,
   Platform,
   Alert,
@@ -22,7 +21,6 @@ import { RFValue } from "react-native-responsive-fontsize";
 import CustomText from "@components/ui/CustomText";
 import { useCartStore } from "@state/cartStore";
 import BillDetails from "./BillDetails";
-import { hocStyles } from "@styles/globalStyles";
 import { useAuthStore } from "@state/authStore";
 import { createOrder, getOrderById } from "@service/orderService";
 import {
@@ -30,15 +28,10 @@ import {
   formatSelectedLocation,
 } from "@utils/AddressPreview";
 import OfferModal from "./OfferModal";
+
+// Web Icons
 import { RiCoupon2Line } from "react-icons/ri";
-// ✅ React Icons (for web)
-import {
-  MdChevronRight,
-  MdDiscount,
-  MdHome,
-  MdLocalOffer,
-  MdSell,
-} from "react-icons/md";
+import { MdChevronRight, MdHome } from "react-icons/md";
 
 const ProductOrder: FC = () => {
   const [offerModalVisible, setOfferModalVisible] = useState(false);
@@ -48,11 +41,11 @@ const ProductOrder: FC = () => {
   const { user, setUser, setCurrentOrder, currentOrder } = useAuthStore();
   const totalItemPrice = getTotalPrice();
   const [loading, setLoading] = useState(false);
-  const [errorMessage] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "online">("cod");
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
   const { selectedLocation, selectedLocationObject } = useLocationStore();
 
+  /* ---------------- PRICE CALC ---------------- */
   let { totalMRP, totalDiscountPrice, productDiscount } =
     calculatePriceSummary(cart);
   let finalAmount = totalDiscountPrice;
@@ -61,46 +54,32 @@ const ProductOrder: FC = () => {
     if (selectedOffer.discountType === "percent") {
       const discount = (finalAmount * selectedOffer.discountValue) / 100;
       finalAmount = Math.max(0, finalAmount - discount);
-    } else if (selectedOffer.discountType === "flat") {
+    } else {
       finalAmount = Math.max(0, finalAmount - selectedOffer.discountValue);
     }
   }
 
-const showAlert = (msg: string | number | any) => {
-  const text = String(msg);
+  /* ---------------- ALERT ---------------- */
+  const showAlert = (msg: any) => {
+    if (Platform.OS === "web") window.alert(String(msg));
+    else Alert.alert(String(msg));
+  };
 
-  if (Platform.OS === "web") {
-    window.alert(text);
-  } else {
-    Alert.alert(text);
-  }
-};
-
-
-
+  /* ---------------- PLACE ORDER ---------------- */
   const handlePlaceOrder = async () => {
     setLoading(true);
 
-  if (!user) {
-  if (Platform.OS === "web") {
-    window.alert("Please login to place your order");
-  } else {
-    Alert.alert("Please login to place your order");
-  }
-  setLoading(false);
-  return;
-}
+    if (!user) {
+      showAlert("Please login to place your order");
+      setLoading(false);
+      return;
+    }
 
     if (!selectedLocation) {
-  if (Platform.OS === "web") {
-    window.alert("Please select a delivery address");
-  } else {
-    Alert.alert("Please select a delivery address");
-  }
-  setLoading(false);
-  return;
-}
-
+      showAlert("Please select a delivery address");
+      setLoading(false);
+      return;
+    }
 
     if (currentOrder !== null) {
       try {
@@ -116,115 +95,92 @@ const showAlert = (msg: string | number | any) => {
       count: item.count,
     }));
 
-   if (formattedData.length === 0) {
-  if (Platform.OS === "web") {
-    window.alert("Add any items to place order");
-  } else {
-    Alert.alert("Add any items to place order");
-  }
-  setLoading(false);
-  return;
-}
-
-   const formattedLocation = formatAddressForBackend(selectedLocationObject);
-
-try {
-  if (paymentMethod === "cod") {
-    const order = await createOrder(
-      formattedData,
-      totalItemPrice,
-      formattedLocation
-    );
-
-    if (order) {
-      clearCart();
-      setCurrentOrder(order);
-      setUser({ ...user, address: selectedLocation });
-
-     navigate("/ordersuccess", {
-  state: {
-    price: totalItemPrice,
-    address: selectedLocation,
-  },
-});
-
-
-    } else {
-      showAlert("Order creation failed");
-    }
-
-  } else {
-    const transaction = await createTransaction(totalItemPrice, user._id);
-
-    if (!transaction) {
-      showAlert("Transaction creation failed");
+    if (formattedData.length === 0) {
+      showAlert("Add any items to place order");
       setLoading(false);
       return;
     }
 
-    const result = await createOrders(
-      transaction.key,
-      transaction.amount,
-      transaction.order_id,
-      formattedData,
-      user._id,
-      formattedLocation
-    );
+    const formattedLocation = formatAddressForBackend(selectedLocationObject);
 
-    if (result?.type === "error") {
-      showAlert(`Payment Failed: ${result.message}`);
-    } else {
-      clearCart();
-      setCurrentOrder(result.order);
-      setUser({ ...user, address: selectedLocation });
+    try {
+      if (paymentMethod === "cod") {
+        const order = await createOrder(
+          formattedData,
+          totalItemPrice,
+          formattedLocation
+        );
 
-     navigate("/ordersuccess", {
-  state: {
-    price: totalItemPrice,
-    address: selectedLocation,
-  },
-});
+        if (order) {
+          clearCart();
+          setCurrentOrder(order);
+          setUser({ ...user, address: selectedLocation });
 
+          navigate("/ordersuccess", {
+            state: {
+              price: totalItemPrice,
+              address: selectedLocation,
+            },
+          });
+        } else {
+          showAlert("Order creation failed");
+        }
+      } else {
+        const transaction = await createTransaction(totalItemPrice, user._id);
+        if (!transaction) {
+          showAlert("Transaction failed");
+          setLoading(false);
+          return;
+        }
+
+        const result = await createOrders(
+          transaction.key,
+          transaction.amount,
+          transaction.order_id,
+          formattedData,
+          user._id,
+          formattedLocation
+        );
+
+        if (result?.type === "error") {
+          showAlert(`Payment Failed: ${result.message}`);
+        } else {
+          clearCart();
+          setCurrentOrder(result.order);
+          setUser({ ...user, address: selectedLocation });
+
+          navigate("/ordersuccess", {
+            state: {
+              price: totalItemPrice,
+              address: selectedLocation,
+            },
+          });
+        }
+      }
+    } catch (e) {
+      showAlert("Something went wrong");
     }
-  }
-} catch (e) {
-  showAlert("Something went wrong");
-}
 
-setLoading(false);
+    setLoading(false);
   };
-
-  const handleSelectPayment = () => setPaymentModalVisible(true);
 
   return (
     <>
       <View style={styles.container}>
         <CustomHeader title="Checkout" />
 
-        {errorMessage ? (
-          <View style={styles.errorBanner}>
-            <CustomText variant="h6" style={styles.errorText}>
-              {errorMessage}
-            </CustomText>
-          </View>
-        ) : null}
-
+        {/* -------- Scrollable Top Section -------- */}
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <OrderList />
 
-          {/* ✅ Coupons Section */}
+          {/* Coupon */}
           <TouchableOpacity
             onPress={() => setOfferModalVisible(true)}
             style={styles.couponContainer}
-            activeOpacity={0.7}
           >
             <View style={styles.flexRow}>
-            <RiCoupon2Line size={15} color={Colors.secondary} />
-              <CustomText
-                fontFamily={Fonts.SemiBold}
-                variant="h8"
-               
-              >
+              <RiCoupon2Line size={15} color={Colors.secondary} />
+              <CustomText fontFamily={Fonts.SemiBold} variant="h8">
                 Use Coupons
               </CustomText>
             </View>
@@ -242,101 +198,107 @@ setLoading(false);
             )}
           </TouchableOpacity>
 
+          {/* BILL */}
           <BillDetails
             totalItemPrice={totalDiscountPrice}
             totalMRP={totalMRP}
             productDiscount={productDiscount}
           />
 
-         <View style={styles.cancellationContainer}>
-  <CustomText
-    fontFamily={Fonts.Medium}
-    variant="h7"
-    style={styles.cancellationHeader}
-  >
-    Cancellation Policy
-  </CustomText>
+          {/* Cancellation */}
+          <View style={styles.cancellationContainer}>
+            <CustomText
+              fontFamily={Fonts.Medium}
+              variant="h7"
+              style={styles.cancellationHeader}
+            >
+              Cancellation Policy
+            </CustomText>
 
-  <CustomText
-    fontFamily={Fonts.Regular}
-    variant="h9"
-    style={styles.cancellationText}
-  >
-    Orders cannot be cancelled once packed for delivery. In case of unexpected
-    delays, a refund will be provided if applicable.
-  </CustomText>
-</View>
-
+            <CustomText
+              fontFamily={Fonts.Regular}
+              variant="h9"
+              style={styles.cancellationText}
+            >
+              Orders cannot be cancelled once packed for delivery. In case of
+              unexpected delays, a refund will be provided if applicable.
+            </CustomText>
+          </View>
         </ScrollView>
 
-        {/* ✅ Bottom section */}
-        <View style={hocStyles.cartcontainer}>
-          <View style={styles.absoluteContainer}>
-            <View style={styles.addressContainer}>
-              <View style={styles.flexRow}>
-                <MdHome size={20} color={Colors.lightcolor} />
-                <View style={{ width: "75%" }}>
-                  <CustomText fontFamily={Fonts.Medium} variant="h8">
-                    {" "}
-                    Delivery to Home
-                  </CustomText>
-                  <CustomText
-                    numberOfLines={2}
-                    variant="h9"
-                    style={{ opacity: 0.6 }}
-                  >
-                    {selectedLocation
-                      ? cleanAddress(formatSelectedLocation(selectedLocation))
-                      : "No address selected"}
-                  </CustomText>
-                </View>
-              </View>
+        {/* -------- FIXED BOTTOM CHECKOUT BAR -------- */}
+        <View style={styles.fixedBottomWrapper}>
+          {/* Address Section */}
+          <View style={styles.addressContainer}>
+            <View style={styles.addressLeft}>
+              <MdHome size={20} color={Colors.lightcolor} />
 
-              <TouchableOpacity
-                onPress={() =>
-                  navigate("LocationSelector", { source: "productorder" })
-                }
-              >
-                <CustomText
-                  fontFamily={Fonts.Medium}
-                  variant="h8"
-                  style={{ color: Colors.secondary }}
-                >
-                  Change
+              <View style={styles.addressTextWrapper}>
+                <CustomText fontFamily={Fonts.Medium} variant="h8">
+                  Delivery to Home
                 </CustomText>
-              </TouchableOpacity>
+
+                <CustomText
+                  numberOfLines={2}
+                  variant="h9"
+                  style={{ opacity: 0.6, marginTop: 2 }}
+                >
+                  {selectedLocation
+                    ? cleanAddress(
+                        formatSelectedLocation(selectedLocation as string)
+                      )
+                    : "No address selected"}
+                </CustomText>
+              </View>
             </View>
 
-            <View style={styles.paymentGateway}>
-              <TouchableOpacity
-                onPress={handleSelectPayment}
-                style={[
-                  styles.paymentBox,
-                  {
-                    borderColor:
-                      paymentMethod === "cod" ? "#2ecc71" : "#3498db",
-                  },
-                ]}
+            <TouchableOpacity
+              onPress={() =>
+                navigate("LocationSelector", { source: "productorder" })
+              }
+            >
+              <CustomText
+                fontFamily={Fonts.Medium}
+                variant="h8"
+                style={{ color: Colors.secondary }}
               >
-                <CustomText fontSize={RFValue(6)} fontFamily={Fonts.Regular}>
-                  💲 PAY USING
-                </CustomText>
-                <CustomText
-                  fontFamily={Fonts.SemiBold}
-                  variant="h9"
-                  style={{
-                    marginTop: 2,
-                    color:
-                      paymentMethod === "cod" ? "#2ecc71" : "#3498db",
-                  }}
-                >
-                  {paymentMethod === "cod"
-                    ? "💵 Cash on Delivery"
-                    : "💳 Online Payment"}
-                </CustomText>
-              </TouchableOpacity>
+                Change
+              </CustomText>
+            </TouchableOpacity>
+          </View>
 
-              <View style={{ width: "70%" }}>
+          {/* Payment Row */}
+          <View style={styles.paymentGateway}>
+            <TouchableOpacity
+              onPress={() => setPaymentModalVisible(true)}
+              style={[
+                styles.paymentBox,
+                {
+                  borderColor:
+                    paymentMethod === "cod" ? "#2ecc71" : "#3498db",
+                },
+              ]}
+            >
+              <CustomText fontSize={RFValue(7)} style={{ opacity: 0.8 }}>
+                💲 PAY USING
+              </CustomText>
+
+              <CustomText
+                fontFamily={Fonts.SemiBold}
+                variant="h9"
+                style={{
+                  marginTop: 4,
+                  color:
+                    paymentMethod === "cod" ? "#2ecc71" : "#3498db",
+                }}
+              >
+                {paymentMethod === "cod"
+                  ? "💵 Cash on Delivery"
+                  : "💳 Online Payment"}
+              </CustomText>
+            </TouchableOpacity>
+
+            <View style={{ width: "70%" }}>
                 <ArrowButton
                   loading={loading}
                   price={finalAmount}
@@ -344,12 +306,11 @@ setLoading(false);
                   onPress={handlePlaceOrder}
                 />
               </View>
-            </View>
           </View>
         </View>
       </View>
 
-      {/* ✅ Modals */}
+      {/* Modals */}
       <PaymentSelectModal
         visible={paymentModalVisible}
         onClose={() => setPaymentModalVisible(false)}
@@ -370,7 +331,63 @@ setLoading(false);
 };
 
 const styles = StyleSheet.create({
-  paymentBox: {
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    paddingBottom: 170, // ⭐ enough space so scrollView doesn't go behind bottom bar
+  },
+
+  scrollContainer: {
+    backgroundColor: Colors.backgroundSecondary,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 20,
+    maxWidth: 640,
+    width: "100%",
+    alignSelf: "center",
+  },
+
+  /* -------- FIXED BOTTOM SECTION -------- */
+  fixedBottomWrapper: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderColor: "#eee",
+    zIndex: 999,
+    elevation: 14,
+  },
+
+  addressContainer: {
+    paddingBottom: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderColor: "#eee",
+  },
+
+  addressLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
+  },
+
+  addressTextWrapper: {
+    width: "75%",
+  },
+
+  paymentGateway: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 12,
+  },
+ paymentBox: {
     height: "79%",
     width: "30%",
     padding: 8,
@@ -378,96 +395,30 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     backgroundColor: "#f9f9f9",
   },
-  errorBanner: {
-    backgroundColor: "#ff4d4f",
-    padding: 10,
-    margin: 10,
-    borderRadius: 6,
-    alignItems: "center",
-  },
-  errorText: {
-    color: "white",
-    fontFamily: Fonts.SemiBold,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  scrollContainer: {
-    backgroundColor: Colors.backgroundSecondary,
-    padding: 10,
-    paddingBottom: 215,
-  },
-  cancellationContainer: {
-  backgroundColor: "#fff",
-  borderRadius: 12,
-  padding: 5,
-  marginTop: 0,
-  marginBottom: 0,
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.08,
-  shadowRadius: 2,
-  elevation: 2,
-},
-
-cancellationHeader: {
-  marginBottom: 3,
-  color: Colors.text,
-},
-
-cancellationText: {
-  color: "rgba(0,0,0,0.6)",
-  lineHeight: 11,
-},
-
-  flexRowBetween: {
-    padding: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderRadius: 15,
-    backgroundColor: "#fff",
-  },
-  paymentGateway: {
-    paddingLeft: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  flexRow: {
-    flexDirection: "row",
-    alignContent: "center",
-    gap: 10,
-  },
-  cancelText: {
-    marginTop: 4,
-    opacity: 0.6,
-  },
-  addressContainer: {
-    paddingBottom: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 10,
-    borderColor: Colors.border,
-    borderBottomWidth: 0.7,
-  },
-  absoluteContainer: {
-    marginVertical: 15,
-    marginBottom: Platform.OS === "ios" ? 30 : 10,
-  },
+  
   couponContainer: {
-    padding: 7,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    padding: 8,
     backgroundColor: "#fff",
     borderRadius: 12,
-    marginVertical: 3,
+    marginVertical: 5,
     borderWidth: 1,
     borderColor: Colors.border,
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
+
+  flexRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+
+  cancellationContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 10,
+    marginTop: 10,
+    marginBottom: 16,
+  },
+
+  cancellationHeader: { marginBottom: 4, color: Colors.text },
+  cancellationText: { opacity: 0.6, lineHeight: 14 },
 });
 
 export default ProductOrder;
