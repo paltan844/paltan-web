@@ -273,7 +273,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginBottom: 10,
   },
-  searchInput: { flex: 1, marginLeft: 8 },
+  searchInput: {
+  flex: 1,
+  marginLeft: 8,
+  outlineStyle: 'none',
+  borderWidth: 0,
+  backgroundColor: 'transparent',
+},
+
   useLocationBtn: {
     flexDirection: 'row',
     alignItems: 'center',
