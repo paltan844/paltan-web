@@ -122,7 +122,7 @@ const Kart: FC<Props> = ({ isConnected, onRetry }) => {
     const handlePress = () => {
       if (item.status === "delivered") {
         useAuthStore.getState().setCurrentOrder(item);
-        navigate("DeliveredOrderDetails");
+        navigate("/deliveredorderdetails");
       }
     };
     return (
@@ -192,7 +192,6 @@ const Kart: FC<Props> = ({ isConnected, onRetry }) => {
   );
 };
 
-/* ---------- Styles ---------- */
 
 const styles = StyleSheet.create({
   mainContainer: {
@@ -202,7 +201,7 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     padding: 1,
     paddingTop: 0,
-    paddingBottom: 70,
+    paddingBottom: 40,
   },
   text: {
     fontSize: 12,
@@ -259,6 +258,7 @@ const styles = StyleSheet.create({
    - WithCart.tsx / .web.tsx
    - withLiveStatus.tsx / .web.tsx
 */
+
 export default withNetworkHandlerWithHeader(
   withLiveStatus(WithCart(Kart))
 );
