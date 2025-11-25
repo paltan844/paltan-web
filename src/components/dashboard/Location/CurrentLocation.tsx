@@ -9,7 +9,7 @@ import { GOOGLE_MAP_API } from "@service/config";
 import CustomHeader from "@components/ui/CustomHeader";
 import { useLocationStorePincode } from "@state/locationStore";
 
-const MAP_HEIGHT = Dimensions.get("window").height * 0.897;
+const MAP_HEIGHT = Dimensions.get("window").height * 0.893;
 
 const loadGoogleMaps = () =>
   new Promise<void>((resolve, reject) => {
