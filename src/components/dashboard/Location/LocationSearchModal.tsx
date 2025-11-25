@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Modal,
   View,
@@ -9,15 +9,24 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
+import { 
+  X,
+  Search,
+  MapPin,
+  Clock,
+  Crosshair,
+} from "lucide-react";   // ✔ ONLY CHANGE
+
 import axios from 'axios';
 import { GOOGLE_MAP_API } from '@service/config';
-import { getRecentLocations, addLocationToRecent, clearRecentLocations } from '@service/recentLocationStorage';
+import { getRecentLocations, addLocationToRecent, clearRecentLocations, RecentItem } from '@service/recentLocationStorage';
 
 type Props = {
   visible: boolean;
   onClose: () => void;
-  onSelectLocation: (placeId: string | undefined, description: string) => void;
+  // Now allow optional geo object as third param for web details
+  onSelectLocation: (placeId: string | undefined, description: string, geo?: { latitude: number; longitude: number }) => void;
   onUseCurrentLocation: () => void;
 };
 
@@ -30,32 +39,9 @@ const LocationSearchModal: React.FC<Props> = ({ visible, onClose, onSelectLocati
   const [query, setQuery] = useState('');
   const [places, setPlaces] = useState<PlaceItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [recentLocations, setRecentLocations] = useState<string[]>([]);
+  const autocompleteServiceRef = useRef<any>(null);
+  const [recentLocations, setRecentLocations] = useState<RecentItem[]>([]);
 
-  const fetchPlaces = async (text: string) => {
-    setLoading(true);
-    try {
-      const response = await axios.get('https://maps.googleapis.com/maps/api/place/autocomplete/json', {
-        params: {
-          input: text,
-          key: GOOGLE_MAP_API,
-          components: 'country:in',
-        },
-      });
-      setPlaces(response.data.predictions || []);
-    } catch (err) {
-      console.error('Place fetch error', err);
-      setPlaces([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSelect = (item: { description: string; place_id?: string }) => {
-    addLocationToRecent(item.description);
-    onSelectLocation(item.place_id, item.description);
-    onClose();
-  };
 
   useEffect(() => {
     if (visible) {
@@ -63,23 +49,119 @@ const LocationSearchModal: React.FC<Props> = ({ visible, onClose, onSelectLocati
     }
   }, [visible]);
 
+  // helper: check if Google Maps JS Places is available
+  const isMapsJsAvailable = () =>
+    typeof window !== 'undefined' && (window as any).google && (window as any).google.maps && (window as any).google.maps.places;
+
+  // fetchPlacePredictions: uses JS API on web; REST (axios) on native
+  const fetchPlaces = async (text: string) => {
+    if (!text || text.length < 3) {
+      setPlaces([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (isMapsJsAvailable()) {
+        // Use AutocompleteService (no CORS)
+        if (!autocompleteServiceRef.current) {
+          autocompleteServiceRef.current = new (window as any).google.maps.places.AutocompleteService();
+        }
+
+        autocompleteServiceRef.current.getPlacePredictions(
+          { input: text, componentRestrictions: { country: 'in' }, types: ['geocode'] },
+          (predictions: any[], status: any) => {
+            if (status === (window as any).google.maps.places.PlacesServiceStatus.OK && predictions) {
+              const results = predictions.map(p => ({ description: p.description, place_id: p.place_id }));
+              setPlaces(results);
+            } else {
+              setPlaces([]);
+            }
+            setLoading(false);
+          }
+        );
+      } else {
+        // Native / fallback -> REST API (works in RN)
+        const response = await axios.get('https://maps.googleapis.com/maps/api/place/autocomplete/json', {
+          params: {
+            input: text,
+            key: GOOGLE_MAP_API,
+            components: 'country:in',
+          },
+        });
+        setPlaces(response.data.predictions || []);
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Place fetch error', err);
+      setPlaces([]);
+      setLoading(false);
+    }
+  };
+
+  // When user selects a prediction:
+  // - On web: fetch place details via PlacesService.getDetails to get lat/lng
+  // - On native: just return place_id and description (caller can call place/details REST if needed)
+  const handleSelect = async (item: { description: string; place_id?: string }) => {
+    addLocationToRecent(item);
+
+    if (isMapsJsAvailable() && item.place_id) {
+      // Get details using PlacesService
+      try {
+        // create an offscreen div for PlacesService
+        const div = document.createElement('div');
+        const service = new (window as any).google.maps.places.PlacesService(div);
+
+        service.getDetails({ placeId: item.place_id }, (placeResult: any, status: any) => {
+          if (status === (window as any).google.maps.places.PlacesServiceStatus.OK && placeResult?.geometry?.location) {
+            const lat = placeResult.geometry.location.lat();
+            const lng = placeResult.geometry.location.lng();
+            onSelectLocation(item.place_id, item.description, { latitude: lat, longitude: lng });
+          } else {
+            // fallback: no geometry -> return without geo
+            onSelectLocation(item.place_id, item.description);
+          }
+          onClose();
+        });
+      } catch (e) {
+        // something failed with JS PlacesService -> fallback
+        console.warn('PlacesService.getDetails failed', e);
+        onSelectLocation(item.place_id, item.description);
+        onClose();
+      }
+    } else {
+      // native or no JS API available — return place_id & description
+      onSelectLocation(item.place_id, item.description);
+      onClose();
+    }
+  };
+
   useEffect(() => {
-    if (query.length >= 3) {fetchPlaces(query);}
-    else {setPlaces([]);}
+    // debounce-like: call fetch when query changes and >=3 chars
+    const id = setTimeout(() => {
+      if (query.length >= 3) fetchPlaces(query);
+      else setPlaces([]);
+    }, 250);
+    return () => clearTimeout(id);
   }, [query]);
+
+
 
   return (
     <Modal visible={visible} animationType="fade" transparent>
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
+          
+          {/* Close Button */}
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Icon name="close" size={24} color="#000" />
+            <X size={24} color="#000" />
           </TouchableOpacity>
 
           <Text style={styles.header}>Change delivery location</Text>
 
+          {/* Search Row */}
           <View style={styles.searchRow}>
-            <Icon name="magnify" size={20} color="#888" />
+            <Search size={20} color="#888" />
             <TextInput
               placeholder="Search for a new area, locality..."
               style={styles.searchInput}
@@ -88,16 +170,17 @@ const LocationSearchModal: React.FC<Props> = ({ visible, onClose, onSelectLocati
               autoFocus
             />
             {query.length > 0 && (
-              <TouchableOpacity onPress={() => setQuery('')}>
-                <Icon name="close-circle" size={18} color="#888" />
+              <TouchableOpacity onPress={() => { setQuery(''); setPlaces([]); }}>
+                <X size={18} color="#888" />
               </TouchableOpacity>
             )}
           </View>
 
+          {/* Use Current Location */}
           {query.length < 3 && (
             <>
               <TouchableOpacity style={styles.useLocationBtn} onPress={onUseCurrentLocation}>
-                <Icon name="crosshairs-gps" size={18} color="#00BA3C" />
+                <Crosshair size={18} color="#00BA3C" />
                 <Text style={styles.useLocationText}>  Use current location</Text>
               </TouchableOpacity>
 
@@ -114,10 +197,10 @@ const LocationSearchModal: React.FC<Props> = ({ visible, onClose, onSelectLocati
                     <TouchableOpacity
                       key={idx}
                       style={styles.itemRow}
-                      onPress={() => handleSelect({ description: loc })}
+                      onPress={() => handleSelect(loc)}
                     >
-                      <Icon name="history" size={20} color="#666" />
-                      <Text style={styles.itemText}>  {loc}</Text>
+                      <Clock size={20} color="#666" />
+                      <Text style={styles.itemText}>  {loc.description}</Text>
                     </TouchableOpacity>
                   ))}
                 </>
@@ -130,6 +213,7 @@ const LocationSearchModal: React.FC<Props> = ({ visible, onClose, onSelectLocati
             </>
           )}
 
+          {/* Search Results */}
           {loading ? (
             <ActivityIndicator size="small" color="#00BA3C" style={{ marginTop: 20 }} />
           ) : (
@@ -139,7 +223,7 @@ const LocationSearchModal: React.FC<Props> = ({ visible, onClose, onSelectLocati
                 keyExtractor={(item, index) => item.place_id + index}
                 renderItem={({ item }) => (
                   <TouchableOpacity style={styles.itemRow} onPress={() => handleSelect(item)}>
-                    <Icon name="map-marker-outline" size={24} color="#FF5C5C" />
+                    <MapPin size={24} color="#FF5C5C" />
                     <View style={{ marginLeft: 10 }}>
                       <Text style={styles.itemTitle}>{item.description.split(',')[0]}</Text>
                       <Text style={styles.itemSubtitle}>{item.description}</Text>
@@ -150,11 +234,13 @@ const LocationSearchModal: React.FC<Props> = ({ visible, onClose, onSelectLocati
               />
             )
           )}
+
         </View>
       </View>
     </Modal>
   );
 };
+
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
