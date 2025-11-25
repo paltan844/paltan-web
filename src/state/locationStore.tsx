@@ -2,6 +2,7 @@ import { getLocationData } from '@service/productService';
 import { create } from 'zustand';
 import { mmkvStorage } from './storage';
 
+
 type LocationState = {
   selectedLocation: string;
   selectedLocationObject: Record<string, any> | null;
