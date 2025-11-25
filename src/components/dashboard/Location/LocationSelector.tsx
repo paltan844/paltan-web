@@ -92,7 +92,6 @@ const LocationSelector = () => {
     fetchLocationData();
   }, []);
 useEffect(() => {
-  console.log("🌍 locationData Loaded →", locationData);
 
   if (locationData?.length > 0) {
     const stateNames = locationData.map((s: any) => s.name);
@@ -107,9 +106,6 @@ useEffect(() => {
       });
     });
 
-    console.log("📌 States →", stateNames);
-    console.log("🏙 Districts →", districtMap);
-    console.log("🏷 Pincodes →", pincodeMap);
 
     setAvailableStates(stateNames);
     setDistricts(districtMap);
@@ -119,7 +115,7 @@ useEffect(() => {
       .flat()
       .map((x: any) => String(x));   // ⭐ FIXED HERE
 
-    console.log("📮 Allowed Pincodes →", allPincodes);
+
 
     setAllowedPincodes(allPincodes);
   }
@@ -213,9 +209,6 @@ useEffect(() => {
   };
 
 const openCurrentLocation = () => {
-  console.log("📤 LocationSelector -> navigating to CurrentLocation");
-  console.log("📤 allowedPincodes (sending) ->", allowedPincodes);
-  console.log("📤 source ->", source);
 
   // -------------------------
   // ⭐ FIX: STORE IN LOCALSTORAGE (Guaranteed, No Loss)
