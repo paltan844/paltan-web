@@ -27,6 +27,7 @@ import CurrentLocationScreen from '@components/dashboard/Location/CurrentLocatio
 import InvoiceDownloadScreen from '@features/profile/InvoiceDownloadScreen';
 import AddressDetail from '@components/dashboard/AddressDetail';
 import LiveTracking from '@features/map/LiveTracking';
+import DeliveredOrderDetails from '@features/profile/deliveredOrderDetail';
 
 
 const Navigation = () => {
@@ -42,7 +43,7 @@ const Navigation = () => {
         <Route path="/productorder" element={<ProductOrder />} />
         <Route path="/ordersuccess" element={<OrderSuccess />} />
         <Route path="/customerlogin" element={<CustomerLogin />} />
-
+        <Route path="/deliveredorderdetails" element={<DeliveredOrderDetails />} />
         <Route path="/productdetail" element={<ProductDetail />} />
         <Route path="/groceryproductdetail" element={<GroceryProductDetail />} />
         <Route path="/mobiledetail" element={<MobileDetails />} />
