@@ -120,6 +120,8 @@ if (allowedPincodes.length === 0) {
       center: { lat, lng },
       zoom: 16,
       disableDefaultUI: true,
+      gestureHandling: "greedy",      
+      fullscreenControl: false,
     });
 
     mapRef.current = map;
