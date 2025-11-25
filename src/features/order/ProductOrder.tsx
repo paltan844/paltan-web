@@ -66,19 +66,41 @@ const ProductOrder: FC = () => {
     }
   }
 
+const showAlert = (msg: string | number | any) => {
+  const text = String(msg);
+
+  if (Platform.OS === "web") {
+    window.alert(text);
+  } else {
+    Alert.alert(text);
+  }
+};
+
+
+
   const handlePlaceOrder = async () => {
     setLoading(true);
 
-    if (!user) {
-      Alert.alert("Please login to place your order");
-      setLoading(false);
-      return;
-    }
+  if (!user) {
+  if (Platform.OS === "web") {
+    window.alert("Please login to place your order");
+  } else {
+    Alert.alert("Please login to place your order");
+  }
+  setLoading(false);
+  return;
+}
+
     if (!selectedLocation) {
-      Alert.alert("Please select a delivery address");
-      setLoading(false);
-      return;
-    }
+  if (Platform.OS === "web") {
+    window.alert("Please select a delivery address");
+  } else {
+    Alert.alert("Please select a delivery address");
+  }
+  setLoading(false);
+  return;
+}
+
 
     if (currentOrder !== null) {
       try {
@@ -94,65 +116,82 @@ const ProductOrder: FC = () => {
       count: item.count,
     }));
 
-    if (formattedData.length === 0) {
-      Alert.alert("Add any items to place order");
+   if (formattedData.length === 0) {
+  if (Platform.OS === "web") {
+    window.alert("Add any items to place order");
+  } else {
+    Alert.alert("Add any items to place order");
+  }
+  setLoading(false);
+  return;
+}
+
+   const formattedLocation = formatAddressForBackend(selectedLocationObject);
+
+try {
+  if (paymentMethod === "cod") {
+    const order = await createOrder(
+      formattedData,
+      totalItemPrice,
+      formattedLocation
+    );
+
+    if (order) {
+      clearCart();
+      setCurrentOrder(order);
+      setUser({ ...user, address: selectedLocation });
+
+     navigate("/ordersuccess", {
+  state: {
+    price: totalItemPrice,
+    address: selectedLocation,
+  },
+});
+
+
+    } else {
+      showAlert("Order creation failed");
+    }
+
+  } else {
+    const transaction = await createTransaction(totalItemPrice, user._id);
+
+    if (!transaction) {
+      showAlert("Transaction creation failed");
       setLoading(false);
       return;
     }
 
-    const formattedLocation = formatAddressForBackend(selectedLocationObject);
+    const result = await createOrders(
+      transaction.key,
+      transaction.amount,
+      transaction.order_id,
+      formattedData,
+      user._id,
+      formattedLocation
+    );
 
-    try {
-      if (paymentMethod === "cod") {
-        const order = await createOrder(
-          formattedData,
-          totalItemPrice,
-          formattedLocation
-        );
-        if (order) {
-          clearCart();
-          setCurrentOrder(order);
-          setUser({ ...user, address: selectedLocation });
-          navigate("OrderSuccess", {
-            price: totalItemPrice,
-            address: selectedLocation,
-          });
-        } else {
-          Alert.alert("Order creation failed");
-        }
-      } else {
-        const transaction = await createTransaction(totalItemPrice, user._id);
-        if (!transaction) {
-          Alert.alert("Transaction creation failed");
-          setLoading(false);
-          return;
-        }
+    if (result?.type === "error") {
+      showAlert(`Payment Failed: ${result.message}`);
+    } else {
+      clearCart();
+      setCurrentOrder(result.order);
+      setUser({ ...user, address: selectedLocation });
 
-        const result = await createOrders(
-          transaction.key,
-          transaction.amount,
-          transaction.order_id,
-          formattedData,
-          user._id,
-          formattedLocation
-        );
+     navigate("/ordersuccess", {
+  state: {
+    price: totalItemPrice,
+    address: selectedLocation,
+  },
+});
 
-        if (result?.type === "error") {
-          Alert.alert("Payment Failed", result.message);
-        } else {
-          clearCart();
-          setCurrentOrder(result.order);
-          setUser({ ...user, address: selectedLocation });
-          navigate("OrderSuccess", {
-            price: totalItemPrice,
-            address: selectedLocation,
-          });
-        }
-      }
-    } catch {
-      Alert.alert("Something went wrong");
     }
-    setLoading(false);
+  }
+} catch (e) {
+  showAlert("Something went wrong");
+}
+
+setLoading(false);
   };
 
   const handleSelectPayment = () => setPaymentModalVisible(true);

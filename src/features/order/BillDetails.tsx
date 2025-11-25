@@ -1,72 +1,45 @@
 import React, { FC } from "react";
-import { View, StyleSheet, Platform } from "react-native";
+import { View, StyleSheet } from "react-native";
 import CustomText from "@components/ui/CustomText";
 import { Colors, Fonts } from "@utils/Constants";
-import { RFValue } from "react-native-responsive-fontsize";
 
-// ✅ Conditional import for icons
-let Icon: any;
-if (Platform.OS === "web") {
-  const {
-    MdCurrencyRupee,
-    MdLocalOffer,
-    MdArticle,
-    MdPedalBike,
-    MdShoppingBag,
-    MdStorefront,
-  } = require("react-icons/md");
+// lucide-react icons (web + mobile safe)
+import {
+  IndianRupee,
+  Tag,
+  Receipt,
+  Bike,
+  ShoppingBag,
+  Store,
+} from "lucide-react";
 
-  // Simple dynamic icon resolver
-  const iconMap: Record<string, any> = {
-    "currency-rupee": MdCurrencyRupee,
-    "local-offer": MdLocalOffer,
-    article: MdArticle,
-    "pedal-bike": MdPedalBike,
-    "shopping-bag": MdShoppingBag,
-    storefront: MdStorefront,
-  };
-
-  Icon = ({ name, size, color }: any) => {
-    const SelectedIcon = iconMap[name] || MdArticle;
-    return <SelectedIcon size={size || 14} color={color || Colors.text} />;
-  };
-} else {
-  Icon = require("react-native-vector-icons/MaterialIcons").default;
-}
-
-/* --------------------- ReportItem --------------------- */
+/* --------------------- Single Line Item Component --------------------- */
 const ReportItem: FC<{
-  iconName: string;
+  IconComp: any;
   underline?: boolean;
   title: string;
   price: number;
   color?: string;
-}> = ({ iconName, underline, title, price, color }) => {
+}> = ({ IconComp, underline, title, price, color }) => {
   return (
-    <View style={[styles.flexRowBetween, { marginBottom: 10 }]}>
+    <View style={styles.flexRowBetween}>
       <View style={styles.flexRow}>
-        <Icon
-          name={iconName}
-          size={RFValue(12)}
-          color={color || Colors.text}
-          style={{ opacity: 0.7 }}
-        />
+        <IconComp size={16} strokeWidth={1.5} color={color || "#444"} />
         <CustomText
           variant="h8"
           style={{
-            textDecorationLine: underline ? "underline" : "none",
-            textDecorationStyle: "dashed",
             color: color || Colors.text,
+            textDecorationLine: underline ? "underline" : "none",
           }}
         >
           {title}
         </CustomText>
       </View>
+
       <CustomText
         variant="h8"
-        style={{
-          color: color || Colors.text,
-        }}
+        fontFamily={Fonts.Medium}
+        style={{ color: color || Colors.text }}
       >
         ₹{price}
       </CustomText>
@@ -74,7 +47,7 @@ const ReportItem: FC<{
   );
 };
 
-/* --------------------- BillDetails --------------------- */
+/* --------------------- Main Bill Details --------------------- */
 const BillDetails: FC<{
   totalItemPrice: number;
   totalMRP: number;
@@ -82,29 +55,58 @@ const BillDetails: FC<{
 }> = ({ totalItemPrice, totalMRP, productDiscount }) => {
   return (
     <View style={styles.container}>
-      <CustomText fontFamily={Fonts.SemiBold} style={styles.text}>
+      {/* Heading */}
+      <CustomText fontFamily={Fonts.SemiBold} variant="h6" style={styles.heading}>
         Bill Details
       </CustomText>
 
-      <View style={styles.billContainer}>
-        <ReportItem iconName="currency-rupee" title="MRP " price={totalMRP} />
+      {/* Bill Items */}
+      <View style={styles.billBox}>
         <ReportItem
-          iconName="local-offer"
+          IconComp={IndianRupee}
+          title="MRP"
+          price={totalMRP}
+        />
+
+        <ReportItem
+          IconComp={Tag}
           title="Product discount"
           price={productDiscount}
-          color={Colors.success}
+          color="green"
         />
-        <ReportItem iconName="article" title="Items total" price={totalItemPrice} />
-        <ReportItem iconName="pedal-bike" title="Delivery charge" price={0} />
-        <ReportItem iconName="shopping-bag" title="Handling charge" price={0} />
-        <ReportItem iconName="storefront" title="Platform charge" price={0} />
+
+        <ReportItem
+          IconComp={Receipt}
+          title="Items total"
+          price={totalItemPrice}
+        />
+
+        <ReportItem
+          IconComp={Bike}
+          title="Delivery charge"
+          price={0}
+        />
+
+        <ReportItem
+          IconComp={ShoppingBag}
+          title="Handling charge"
+          price={0}
+        />
+
+        <ReportItem
+          IconComp={Store}
+          title="Platform charge"
+          price={0}
+        />
       </View>
 
-      <View style={[styles.flexRowBetween, { marginBottom: 15 }]}>
-        <CustomText fontFamily={Fonts.SemiBold} variant="h7" style={styles.text}>
+      {/* Grand Total */}
+      <View style={styles.totalRow}>
+        <CustomText fontFamily={Fonts.SemiBold} variant="h7">
           Grand Total
         </CustomText>
-        <CustomText fontFamily={Fonts.SemiBold} style={styles.text}>
+
+        <CustomText fontFamily={Fonts.SemiBold} variant="h7">
           ₹{totalItemPrice}
         </CustomText>
       </View>
@@ -118,26 +120,43 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     marginVertical: 15,
     backgroundColor: "#fff",
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
   },
-  billContainer: {
-    paddingBottom: 0,
-    padding: 10,
-    borderColor: Colors.border,
-    borderBottomWidth: 0.7,
+
+  heading: {
+    marginBottom: 12,
+    paddingHorizontal: 14,
+    paddingTop: 14,
   },
-  text: {
-    marginTop: 15,
-    marginHorizontal: 10,
+
+  billBox: {
+    padding: 14,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderColor: "#e5e7eb",
+    gap: 12,
   },
+
   flexRowBetween: {
-    justifyContent: "space-between",
-    alignItems: "center",
     flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
+
   flexRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
+    gap: 6,
+  },
+
+  totalRow: {
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
 });
 

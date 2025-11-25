@@ -1,59 +1,83 @@
-import React, { FC } from 'react';
-import { View, StyleSheet } from 'react-native';
-import CustomText from '@components/ui/CustomText';
-import { Colors, Fonts } from '@utils/Constants';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { formatOrderDate } from '@utils/DateUtils';
+import React, { FC } from "react";
+import { View, StyleSheet } from "react-native";
+import CustomText from "@components/ui/CustomText";
+import { Colors, Fonts } from "@utils/Constants";
+import { formatOrderDate } from "@utils/DateUtils";
+
+// Web + Mobile friendly icons
+import {
+  Hash,
+  Wallet,
+  MapPin,
+  Clock,
+  BadgeCheck,
+} from "lucide-react";
 
 interface Props {
   order: any;
 }
 
-
 const OrderDetails: FC<Props> = ({ order }) => {
   return (
     <View style={styles.container}>
-      <CustomText fontFamily={Fonts.SemiBold} style={styles.heading}>
-        Order details
+      {/* Heading */}
+      <CustomText
+        fontFamily={Fonts.SemiBold}
+        style={styles.heading}
+        variant="h6"
+      >
+        Order Details
       </CustomText>
 
+      {/* 1. Order ID */}
       <View style={styles.row}>
-        <Icon name="confirmation-number" size={16} color={Colors.text} />
-        <CustomText variant="h8">Order ID</CustomText>
+        <Hash size={16} color="#444" />
+        <CustomText variant="h8" fontFamily={Fonts.Medium}>
+          Order ID
+        </CustomText>
       </View>
-      <View style={styles.rows}>
-        <CustomText variant="h8">#{order?.orderId || '—'}</CustomText>
+      <View style={styles.valueRow}>
+        <CustomText variant="h8">#{order?.orderId || "—"}</CustomText>
       </View>
 
+      {/* 2. Payment */}
       <View style={styles.row}>
-        <Icon name="payment" size={16} color={Colors.text} />
-        <CustomText variant="h8">Payment</CustomText>
+        <Wallet size={16} color="#444" />
+        <CustomText variant="h8" fontFamily={Fonts.Medium}>
+          Payment
+        </CustomText>
       </View>
-      <View style={styles.rows}>
+      <View style={styles.valueRow}>
         <CustomText variant="h8">
-          {order?.paymentType || 'N/A'}
+          {order?.paymentType || "N/A"}
         </CustomText>
       </View>
 
+      {/* 3. Address */}
       <View style={styles.row}>
-        <Icon name="location-on" size={16} color={Colors.text} />
-        <CustomText variant="h8">Deliver to</CustomText>
+        <MapPin size={16} color="#444" />
+        <CustomText variant="h8" fontFamily={Fonts.Medium}>
+          Deliver to
+        </CustomText>
       </View>
-      <View style={styles.rows}>
+      <View style={styles.valueRow}>
         <CustomText variant="h8">
-          {(order.deliveryLocation.fullAddress) ||
-            'N/A'}
+          {order?.deliveryLocation?.fullAddress || "N/A"}
         </CustomText>
       </View>
 
+      {/* 4. Order Placed */}
       <View style={styles.row}>
-        <Icon name="access-time" size={16} color={Colors.text} />
-        <CustomText variant="h8">Order placed</CustomText>
+        <Clock size={16} color="#444" />
+        <CustomText variant="h8" fontFamily={Fonts.Medium}>
+          Order placed
+        </CustomText>
       </View>
-      <View style={styles.rows}>
+      <View style={styles.valueRow}>
         <CustomText variant="h8">
-      {order?.createdAt ? formatOrderDate(order.createdAt, true, true) : 'N/A'}
-
+          {order?.createdAt
+            ? formatOrderDate(order.createdAt, true, true)
+            : "N/A"}
         </CustomText>
       </View>
     </View>
@@ -64,23 +88,27 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: 15,
     marginVertical: 15,
-    padding: 10,
-    backgroundColor: '#fff',
+    padding: 14,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
   },
+
   heading: {
     marginBottom: 12,
+    color: "#111",
   },
+
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-    gap: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 3,
+    gap: 8,
   },
-  rows: {
-    flexDirection: 'row',
-    alignItems: 'center',
+
+  valueRow: {
+    marginLeft: 24,
     marginBottom: 10,
-    marginLeft: 3,
   },
 });
 
