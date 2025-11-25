@@ -388,8 +388,6 @@ export default CurrentLocationScreen;                 */
 
 
 
-
-
 import React, { useEffect, useRef, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -400,8 +398,7 @@ import { GOOGLE_MAP_API } from "@service/config";
 import CustomHeader from "@components/ui/CustomHeader";
 import { useLocationStorePincode } from "@state/locationStore";
 
-const MAP_HEIGHT = Dimensions.get("window").height;   // FULL height
-
+const MAP_HEIGHT = Dimensions.get("window").height * 0.937;
 
 /* ---------------- GOOGLE LOADER ---------------- */
 const loadGoogleMaps = () =>
