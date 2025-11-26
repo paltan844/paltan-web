@@ -93,6 +93,5 @@ export const confirmOrder = async (id:string, location:any) => {
 
 export const getInvoiceUrlByOrderId = async (orderId: string) => {
   const { data } = await appAxios.get(`/order/${orderId}/invoice`);
-  console.log(data,"jhwgcvdsn df");
   return data; // expected { pdfUrl: "https://..." }
 };
