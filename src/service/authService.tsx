@@ -1,6 +1,8 @@
 
+
 import axios from "axios";
 import { BASE_URL } from "./config";
+import { appAxios } from "./apilnterceptors";
 
 // ⭐ Update User's Live Location + Address
 export const updateUserLocation = (
@@ -91,6 +93,35 @@ export const refresh_tokens = async (): Promise<string | null> => {
     // ✔ Correct login route for your app
     window.location.href = "/customerlogin";
 
+    return null;
+  }
+};
+
+
+// ----------------------
+// REFETCH USER (after refresh token)
+// ----------------------
+export const refetchUser = async (setUser: (u: any) => void) => {
+  try {
+    const response = await appAxios.get("/customer/me");  
+
+    const user = response.data.customer || response.data.user;
+
+    if (user) {
+      // save to storage
+      localStorage.setItem("user", JSON.stringify(user));
+
+      // update Zustand
+      if (typeof setUser === "function") {
+        setUser(user);
+      }
+
+      return user;
+    }
+
+    return null;
+  } catch (error) {
+    console.warn("refetchUser failed:", error);
     return null;
   }
 };
