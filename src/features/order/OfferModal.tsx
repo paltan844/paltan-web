@@ -267,7 +267,7 @@ const OfferModal: React.FC<OfferModalProps> = ({ visible, onClose }) => {
             opacity: 0.7,
           }}
         >
-          Abhi koi offer available nahi hai
+          No Offer Available 
         </CustomText>
       </View>
     </Modal>
@@ -307,4 +307,5 @@ const styles = StyleSheet.create({
 });
 
 export default OfferModal;
+
 
