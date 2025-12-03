@@ -1,3 +1,4 @@
+/*
 import React, { useEffect, useState } from "react";
 import {
   Modal,
@@ -94,7 +95,7 @@ const OfferModal: React.FC<OfferModalProps> = ({
           </CustomText>
         ) : null}
 
-        {/* Optional discount label */}
+        {/* Optional discount label /}
         <CustomText
           style={{
             marginTop: 6,
@@ -195,3 +196,115 @@ const styles = StyleSheet.create({
 });
 
 export default OfferModal;
+*/
+
+
+import React from "react";
+import {
+  Modal,
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  Pressable,
+  Dimensions,
+  Platform,
+} from "react-native";
+import CustomText from "@components/ui/CustomText";
+import { Colors, Fonts } from "@utils/Constants";
+import { RFValue } from "react-native-responsive-fontsize";
+
+// ✅ Conditional icon imports
+let CloseIcon: any;
+if (Platform.OS === "web") {
+  const { MdClose } = require("react-icons/md");
+  CloseIcon = MdClose;
+} else {
+  const MaterialCommunityIcons = require("react-native-vector-icons/MaterialCommunityIcons").default;
+  CloseIcon = (props: any) => (
+    <MaterialCommunityIcons {...props} name="close" />
+  );
+}
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+interface OfferModalProps {
+  visible: boolean;
+  onClose: () => void;
+}
+
+const OfferModal: React.FC<OfferModalProps> = ({ visible, onClose }) => {
+  return (
+    <Modal visible={visible} animationType="slide" transparent>
+      <Pressable style={styles.overlay} onPress={onClose} />
+
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <CustomText variant="h6" fontFamily={Fonts.SemiBold}>
+            Available Offers
+          </CustomText>
+
+          <TouchableOpacity onPress={onClose}>
+            {Platform.OS === "web" ? (
+              <CloseIcon size={22} color={Colors.text} />
+            ) : (
+              <CloseIcon size={24} color={Colors.text} />
+            )}
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.divider} />
+
+        {/* 
+          ◎ BACKEND HATA DIYA
+          ◎ OFFERS LIST HATA DIYA
+          ◎ ALWAYS SHOW: "Abhi koi offer available nahi hai"
+        */}
+        <CustomText
+          style={{
+            textAlign: "center",
+            marginTop: 40,
+            fontSize: RFValue(14),
+            opacity: 0.7,
+          }}
+        >
+          Abhi koi offer available nahi hai
+        </CustomText>
+      </View>
+    </Modal>
+  );
+};
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+  },
+  container: {
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    height: SCREEN_HEIGHT * 0.9,
+    backgroundColor: Colors.backgroundSecondary,
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 10,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginVertical: 12,
+  },
+});
+
+export default OfferModal;
+
