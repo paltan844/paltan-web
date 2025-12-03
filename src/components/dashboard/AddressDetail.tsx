@@ -13,6 +13,7 @@ import CustomHeader from "@components/ui/CustomHeader";
 import { useAuthStore } from "@state/authStore";
 import { useLocationStore } from "@state/locationStore";
 import { getAddresses, mmkvStorage, saveAddresses } from "@state/storage";
+import { replace } from "@utils/NavigationUtils";
 
 // Floating Label Component (Web Safe)
 const FloatingLabelInput = ({
@@ -199,7 +200,7 @@ const { prefillAddress, allowedPincodes = [], source } = (location.state || {}) 
           <TouchableOpacity
             style={styles.addLocationButton}
             onPress={() =>
-              navigate("/currentlocation", {
+              replace("/currentlocation", {
                 state: { allowedPincodes, source },
               })
             }
