@@ -269,34 +269,65 @@ const ProductOrder: FC = () => {
 
           {/* Payment Row */}
           <View style={styles.paymentGateway}>
-            <TouchableOpacity
-              onPress={() => setPaymentModalVisible(true)}
-              style={[
-                styles.paymentBox,
-                {
-                  borderColor:
-                    paymentMethod === "cod" ? "#2ecc71" : "#3498db",
-                },
-              ]}
-            >
-              <CustomText fontSize={RFValue(7)} style={{ opacity: 0.8 }}>
-                💲 PAY USING
-              </CustomText>
+             <TouchableOpacity
+  onPress={() => setPaymentModalVisible(true)}
+  style={[
+    styles.paymentBox,
+    {
+      borderColor: paymentMethod === "cod" ? "#2ecc71" : "#3498db",
+    },
+  ]}
+>
+  <View
+    style={{
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    }}
+  >
+    {/* LEFT SIDE */}
+    <View style={{ flexDirection: "column" }}>
 
-              <CustomText
-                fontFamily={Fonts.SemiBold}
-                variant="h9"
-                style={{
-                  marginTop: 4,
-                  color:
-                    paymentMethod === "cod" ? "#2ecc71" : "#3498db",
-                }}
-              >
-                {paymentMethod === "cod"
-                  ? "💵 Cash on Delivery"
-                  : "💳 Online Payment"}
-              </CustomText>
-            </TouchableOpacity>
+      {/* PAY USING + ARROW IN SAME ROW */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 6,
+        }}
+      >
+        <CustomText fontSize={RFValue(7)} style={{ opacity: 0.8 }}>
+          💲 PAY USING
+        </CustomText>
+
+        {/* Arrow with background */}
+        <View
+          style={{
+            //backgroundColor: Colors.secondary,
+           // padding: 1,
+            borderRadius: 6,
+          }}
+        >
+          <MdChevronRight size={14} color="#190101ff"  style={{ transform: "rotate(-90deg)" }}/>
+        </View>
+      </View>
+
+      {/* Payment Method (below) */}
+      <CustomText
+        fontFamily={Fonts.SemiBold}
+        variant="h9"
+        style={{
+          marginTop: 4,
+          color: paymentMethod === "cod" ? "#2ecc71" : "#3498db",
+        }}
+      >
+        {paymentMethod === "cod"
+          ? "💵 Cash on Delivery"
+          : "💳 Online Payment"}
+      </CustomText>
+    </View>
+  </View>
+</TouchableOpacity>
 
             <View style={{ width: "70%" }}>
                 <ArrowButton
@@ -422,3 +453,4 @@ const styles = StyleSheet.create({
 });
 
 export default ProductOrder;
+
