@@ -28,6 +28,7 @@ import {
   formatSelectedLocation,
 } from "@utils/AddressPreview";
 import OfferModal from "./OfferModal";
+import type { Offer } from "@service/productService";
 
 // Web Icons
 import { RiCoupon2Line } from "react-icons/ri";
@@ -35,7 +36,17 @@ import { MdChevronRight, MdHome } from "react-icons/md";
 
 const ProductOrder: FC = () => {
   const [offerModalVisible, setOfferModalVisible] = useState(false);
-  const [selectedOffer, setSelectedOffer] = useState<any>(null);
+  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
+
+  const [appliedOffer, setAppliedOffer] = useState<{
+    discount: number;
+    finalTotal: number;
+    couponCode: string;
+    title: string;
+    reason?: string;
+  } | null>(null);
+
+
 
   const { getTotalPrice, cart, clearCart } = useCartStore();
   const { user, setUser, setCurrentOrder, currentOrder } = useAuthStore();
@@ -45,27 +56,19 @@ const ProductOrder: FC = () => {
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
   const { selectedLocation, selectedLocationObject } = useLocationStore();
 
-  /* ---------------- PRICE CALC ---------------- */
+
   let { totalMRP, totalDiscountPrice, productDiscount } =
     calculatePriceSummary(cart);
-  let finalAmount = totalDiscountPrice;
 
-  if (selectedOffer) {
-    if (selectedOffer.discountType === "percent") {
-      const discount = (finalAmount * selectedOffer.discountValue) / 100;
-      finalAmount = Math.max(0, finalAmount - discount);
-    } else {
-      finalAmount = Math.max(0, finalAmount - selectedOffer.discountValue);
-    }
-  }
+  const cartTotal = totalDiscountPrice;
+  const finalAmount = appliedOffer?.finalTotal ?? cartTotal;
 
-  /* ---------------- ALERT ---------------- */
   const showAlert = (msg: any) => {
     if (Platform.OS === "web") window.alert(String(msg));
     else Alert.alert(String(msg));
   };
 
-  /* ---------------- PLACE ORDER ---------------- */
+
   const handlePlaceOrder = async () => {
     setLoading(true);
 
@@ -107,7 +110,7 @@ const ProductOrder: FC = () => {
       if (paymentMethod === "cod") {
         const order = await createOrder(
           formattedData,
-          totalItemPrice,
+          finalAmount,
           formattedLocation
         );
 
@@ -118,7 +121,7 @@ const ProductOrder: FC = () => {
 
           navigate("/ordersuccess", {
             state: {
-              price: totalItemPrice,
+              price: finalAmount,
               address: selectedLocation,
             },
           });
@@ -126,7 +129,7 @@ const ProductOrder: FC = () => {
           showAlert("Order creation failed");
         }
       } else {
-        const transaction = await createTransaction(totalItemPrice, user._id);
+        const transaction = await createTransaction(finalAmount, user._id);
         if (!transaction) {
           showAlert("Transaction failed");
           setLoading(false);
@@ -151,13 +154,14 @@ const ProductOrder: FC = () => {
 
           navigate("/ordersuccess", {
             state: {
-              price: totalItemPrice,
+              price: finalAmount,
               address: selectedLocation,
             },
           });
         }
       }
     } catch (e) {
+      console.error("❌ handlePlaceOrder error:", e);
       showAlert("Something went wrong");
     }
 
@@ -169,43 +173,69 @@ const ProductOrder: FC = () => {
       <View style={styles.container}>
         <CustomHeader title="Checkout" />
 
-        {/* -------- Scrollable Top Section -------- */}
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <OrderList />
 
-          {/* Coupon */}
-          <TouchableOpacity
-            onPress={() => setOfferModalVisible(true)}
-            style={styles.couponContainer}
-          >
-            <View style={styles.flexRow}>
-              <RiCoupon2Line size={15} color={Colors.secondary} />
-              <CustomText fontFamily={Fonts.SemiBold} variant="h8">
-                Use Coupons
-              </CustomText>
-            </View>
+          {selectedOffer && appliedOffer ? (
+            <View style={styles.couponAppliedBox}>
+              <View>
+                <CustomText
+                  fontFamily={Fonts.SemiBold}
+                  variant="h8"
+                  style={{ color: Colors.secondary }}
+                >
+                  Coupon Code: {appliedOffer.couponCode}
+                </CustomText>
 
-            {selectedOffer ? (
-              <CustomText
-                fontFamily={Fonts.SemiBold}
-                variant="h9"
-                style={{ color: Colors.secondary }}
+                <CustomText
+                  fontFamily={Fonts.Medium}
+                  variant="h9"
+                  style={{ opacity: 0.7, marginTop: 2 }}
+                >
+                  PALTAN Offer applied 🎉 You saved ₹{appliedOffer.discount}
+                </CustomText>
+              </View>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setSelectedOffer(null);
+                  setAppliedOffer(null);
+                }}
+                style={styles.removeBtn}
               >
-                {selectedOffer.title}
-              </CustomText>
-            ) : (
-              <MdChevronRight size={18} color={Colors.text} />
-            )}
-          </TouchableOpacity>
+                <CustomText
+                  fontFamily={Fonts.SemiBold}
+                  variant="h9"
+                  style={{ color: "#FF3B30" }}
+                >
+                  Remove
+                </CustomText>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              onPress={() => setOfferModalVisible(true)}
+              style={styles.couponContainer}
+            >
+              <View style={styles.flexRow}>
+                <RiCoupon2Line size={15} color={Colors.secondary} />
+                <CustomText fontFamily={Fonts.SemiBold} variant="h8">
+                  Use Coupons
+                </CustomText>
+              </View>
 
-          {/* BILL */}
+              <MdChevronRight size={18} color={Colors.text} />
+            </TouchableOpacity>
+          )}
+
           <BillDetails
-            totalItemPrice={totalDiscountPrice}
+            totalItemPrice={cartTotal}
             totalMRP={totalMRP}
             productDiscount={productDiscount}
+            offerDiscount={appliedOffer?.discount ?? 0}
+            grandTotal={finalAmount}
           />
 
-          {/* Cancellation */}
           <View style={styles.cancellationContainer}>
             <CustomText
               fontFamily={Fonts.Medium}
@@ -226,9 +256,7 @@ const ProductOrder: FC = () => {
           </View>
         </ScrollView>
 
-        {/* -------- FIXED BOTTOM CHECKOUT BAR -------- */}
         <View style={styles.fixedBottomWrapper}>
-          {/* Address Section */}
           <View style={styles.addressContainer}>
             <View style={styles.addressLeft}>
               <MdHome size={20} color={Colors.lightcolor} />
@@ -267,9 +295,8 @@ const ProductOrder: FC = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Payment Row */}
           <View style={styles.paymentGateway}>
-             <TouchableOpacity
+        <TouchableOpacity
   onPress={() => setPaymentModalVisible(true)}
   style={[
     styles.paymentBox,
@@ -308,7 +335,7 @@ const ProductOrder: FC = () => {
             borderRadius: 6,
           }}
         >
-          <MdChevronRight size={14} color="#190101ff"  style={{ transform: "rotate(-90deg)" }}/>
+          <MdChevronRight size={16} color="#190101ff"  style={{ transform: "rotate(-90deg)" }}/>
         </View>
       </View>
 
@@ -317,7 +344,7 @@ const ProductOrder: FC = () => {
         fontFamily={Fonts.SemiBold}
         variant="h9"
         style={{
-          marginTop: 4,
+          marginTop: 3,
           color: paymentMethod === "cod" ? "#2ecc71" : "#3498db",
         }}
       >
@@ -329,19 +356,20 @@ const ProductOrder: FC = () => {
   </View>
 </TouchableOpacity>
 
+
+
             <View style={{ width: "70%" }}>
-                <ArrowButton
-                  loading={loading}
-                  price={finalAmount}
-                  title="Proceed to Pay"
-                  onPress={handlePlaceOrder}
-                />
-              </View>
+              <ArrowButton
+                loading={loading}
+                price={finalAmount}
+                title="Proceed to Pay"
+                onPress={handlePlaceOrder}
+              />
+            </View>
           </View>
         </View>
       </View>
 
-      {/* Modals */}
       <PaymentSelectModal
         visible={paymentModalVisible}
         onClose={() => setPaymentModalVisible(false)}
@@ -352,20 +380,32 @@ const ProductOrder: FC = () => {
       <OfferModal
         visible={offerModalVisible}
         onClose={() => setOfferModalVisible(false)}
-        onSelect={(offer) => {
+        onSelect={({ offer, discount, finalTotal, reason }) => {
           setSelectedOffer(offer);
+          setAppliedOffer({
+            discount,
+            finalTotal,
+            couponCode: offer.couponCode,
+            title: offer.title,
+            reason,
+          });
           setOfferModalVisible(false);
         }}
+        selectedOfferId={selectedOffer?._id}
+        cartTotal={cartTotal}
+        userId={user?._id}
+        isFirstOrder={user?.isFirstOrder}
       />
     </>
   );
 };
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingBottom: 170, // ⭐ enough space so scrollView doesn't go behind bottom bar
+    paddingBottom: 170,
   },
 
   scrollContainer: {
@@ -378,7 +418,40 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
 
-  /* -------- FIXED BOTTOM SECTION -------- */
+  flexRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+
+  couponContainer: {
+    padding: 10,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    marginVertical: 5,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  couponAppliedBox: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: "#F0FFF4",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#2ecc7144",
+    marginBottom: 12,
+  },
+
+  removeBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#FF3B30",
+  },
   fixedBottomWrapper: {
     position: "absolute",
     bottom: 0,
@@ -392,7 +465,6 @@ const styles = StyleSheet.create({
     zIndex: 999,
     elevation: 14,
   },
-
   addressContainer: {
     paddingBottom: 10,
     flexDirection: "row",
@@ -400,46 +472,29 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: "#eee",
   },
-
   addressLeft: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
     flex: 1,
   },
-
   addressTextWrapper: {
     width: "75%",
   },
-
   paymentGateway: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
     marginTop: 12,
   },
- paymentBox: {
+  paymentBox: {
     height: "79%",
     width: "30%",
-    padding: 8,
+    padding: 7,
     borderRadius: 10,
     borderWidth: 1.5,
     backgroundColor: "#f9f9f9",
   },
-  
-  couponContainer: {
-    padding: 8,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    marginVertical: 5,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-
-  flexRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-
   cancellationContainer: {
     backgroundColor: "#fff",
     borderRadius: 12,
@@ -453,4 +508,3 @@ const styles = StyleSheet.create({
 });
 
 export default ProductOrder;
-
