@@ -28,9 +28,14 @@ style={[styles.btn,{
 >
     {loading ?
  <ActivityIndicator color="white" size="small"/> :
- <CustomText variant="h6" style={styles.text} fontFamily={Fonts.SemiBold}>
-{title}
- </CustomText>
+<CustomText
+  variant="h6"
+  style={[styles.text, { fontSize: 16 }]}   // ← FIXED SIZE ADDED
+  fontFamily={Fonts.SemiBold}
+>
+  {title}
+</CustomText>
+
 }
 
 </TouchableOpacity>
