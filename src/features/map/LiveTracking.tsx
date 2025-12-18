@@ -28,12 +28,12 @@ const LiveTracking: FC = () => {
   };
 
 
-  
+
   useEffect(() => {
     fetchOrderDetails();
   }, []);
 useEffect(() => {
-    if (Platform.OS === "web") return;
+    if (Platform.OS !== "android") return;
 
     const onBackPress = () => {
       navigate("MainTabs");
@@ -44,14 +44,13 @@ useEffect(() => {
 
       return true; 
     };
+    
+  BackHandler.addEventListener("hardwareBackPress", onBackPress);
 
-    const subscription = BackHandler.addEventListener(
-      "hardwareBackPress",
-      onBackPress
-    );
-
-    return () => subscription.remove();
+    return () =>
+      BackHandler.removeEventListener("hardwareBackPress", onBackPress);
   }, [currentOrder]);
+
 
 
 
