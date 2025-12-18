@@ -16,7 +16,7 @@ import PaymentSelectModal from "./PaymentModal";
 import { useLocationStore } from "@state/locationStore";
 import { cleanAddress } from "@utils/CleanAddress";
 import ArrowButton from "@components/ui/ArrowButton";
-import { navigate } from "@utils/NavigationUtils";
+import { navigate, replace } from "@utils/NavigationUtils";
 import { RFValue } from "react-native-responsive-fontsize";
 import CustomText from "@components/ui/CustomText";
 import { useCartStore } from "@state/cartStore";
@@ -30,7 +30,7 @@ import {
 import OfferModal from "./OfferModal";
 import type { Offer } from "@service/productService";
 
-// Web Icons
+
 import { RiCoupon2Line } from "react-icons/ri";
 import { MdChevronRight, MdHome } from "react-icons/md";
 import BillSkeleton from "./BillSkelton";
@@ -215,7 +215,7 @@ useEffect(() => {
         setCurrentOrder(order);
         setUser({ ...user, address: selectedLocation });
 
-        navigate("OrderSuccess", {
+        replace("OrderSuccess", {
           price: order.finalAmount,
           address: selectedLocation,
         });
@@ -257,7 +257,7 @@ useEffect(() => {
       setCurrentOrder(result.order);
       setUser({ ...user, address: selectedLocation });
 
-      navigate("OrderSuccess", {
+      replace("OrderSuccess", {
         price: result.order.finalAmount,
         address: selectedLocation,
       });
