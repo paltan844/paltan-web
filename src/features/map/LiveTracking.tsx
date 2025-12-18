@@ -1,9 +1,9 @@
 import {
-  View,
-  StyleSheet,
+  View, StyleSheet,
   ScrollView,
   TouchableOpacity,
   Platform,
+  BackHandler,
 } from "react-native";
 import React, { FC, useEffect } from "react";
 import { useAuthStore } from "@state/authStore";
@@ -15,8 +15,9 @@ import DeliveryDetails from "./DeliveryDetails";
 import OrderSummary from "./OrderSummary";
 import withLiveStatus from "./withLiveStatus";
 
-// WEB SAFE ICONS (replace vector-icons)
 import { Phone, ShoppingBag, MapPin } from "lucide-react";
+import { useFocusEffect } from "@react-navigation/native";
+import { navigate } from "@utils/NavigationUtils";
 
 const LiveTracking: FC = () => {
   const { currentOrder, setCurrentOrder } = useAuthStore();
@@ -26,9 +27,33 @@ const LiveTracking: FC = () => {
     setCurrentOrder(data);
   };
 
+
+  
   useEffect(() => {
     fetchOrderDetails();
   }, []);
+useEffect(() => {
+    if (Platform.OS === "web") return;
+
+    const onBackPress = () => {
+      navigate("MainTabs");
+
+      if (currentOrder?.status === "delivered") {
+        setCurrentOrder(null);
+      }
+
+      return true; 
+    };
+
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      onBackPress
+    );
+
+    return () => subscription.remove();
+  }, [currentOrder]);
+
+
 
   let msg = "Packing your order";
   let time = "Arriving same day";
@@ -52,9 +77,7 @@ const LiveTracking: FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* =======================
-            Delivery Partner Section
-        ========================== */}
+ 
         <View style={styles.flexRow}>
           <View style={styles.stylishIconBox}>
             {currentOrder?.deliveryPartner ? (
@@ -92,9 +115,7 @@ const LiveTracking: FC = () => {
           </View>
         </View>
 
-        {/* ==========================
-            Change Address Section
-        ============================ */}
+     
         {(currentOrder?.status !== "arriving" ||
           currentOrder?.status !== "delivered" ||
           currentOrder?.status === "confirmed") && (
@@ -128,14 +149,8 @@ const LiveTracking: FC = () => {
           </View>
         )}
 
-        {/* ==========================
-               Delivery Details
-        ============================= */}
         <DeliveryDetails details={currentOrder?.deliveryLocation} />
 
-        {/* ==========================
-               Order Summary
-        ============================= */}
         <OrderSummary order={currentOrder} />
 
         <CustomText
@@ -161,7 +176,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroundSecondary,
   },
 
-  /* Partner & Info Box */
   flexRow: {
     marginTop: 15,
     backgroundColor: "#fff",
