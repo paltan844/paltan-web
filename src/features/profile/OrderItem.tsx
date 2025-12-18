@@ -13,7 +13,7 @@ interface CartItem {
 interface Order {
   orderId: string;
   items: CartItem[];
-  totalPrice: number;
+  finalAmount: number;
   createdAt: string;
   status: 'confirmed' | 'completed' | 'cancelled' | 'delivered' | 'available' | 'arriving';
 }
@@ -27,7 +27,9 @@ const statusColors: Record<string, { bg: string; text: string }> = {
 };
 
 const OrderItem: FC<{ item: Order; index: number; onPress?: () => void }> = ({ item, index, onPress }) => {
-  const { orderId, items, totalPrice, createdAt, status } = item;
+  const { orderId, items, finalAmount, createdAt, status } = item;
+  
+const safeAmount = Number(finalAmount ?? 0);
 
   const colors = statusColors[status] || { bg: '#F5F5F5', text: '#757575' };
 
@@ -35,7 +37,7 @@ const OrderItem: FC<{ item: Order; index: number; onPress?: () => void }> = ({ i
     style: 'currency',
     currency: 'INR',
     maximumFractionDigits: 0,
-  }).format(totalPrice);
+  }).format(safeAmount);
 
   const isTouchable = status === 'delivered';
 
