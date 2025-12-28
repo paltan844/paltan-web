@@ -1,64 +1,99 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Colors, Fonts } from "@utils/Constants";
-import { customerLogin } from "@service/authService";
-import { mmkvStorage } from "@state/storage";
 import CustomButton from "@components/ui/CustomButton";
 import { useAuthStore } from "@state/authStore";
-import { clearAuthStorage, setAccessToken, setRefreshToken, setUserStorage } from "@utils/webAuthStorage";
+import { mmkvStorage } from "@state/storage";
+import {
+  clearAuthStorage,
+  setAccessToken,
+  setRefreshToken,
+  setUserStorage,
+} from "@utils/webAuthStorage";
+import {
+  sendEmailOtp,
+  verifyEmailOtpAndLogin,
+} from "@service/authService";
+
 
 const CustomerLogin: React.FC = () => {
-   const navigateTo = useNavigate();
+  const navigateTo = useNavigate();
   const { setUser, user } = useAuthStore();
+
+  const [step, setStep] = useState<
+    "name" | "phone" | "email" | "emailOtp"
+  >("name");
 
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [emailOtp, setEmailOtp] = useState("");
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<"name" | "phone">("name");
   const [fadeIn, setFadeIn] = useState(false);
 
-
-useEffect(() => {
-  if (user && user._id) {
-    navigateTo("/profile", { replace: true });
-  }
-}, [user]);
-
+  useEffect(() => {
+    if (user && user._id) {
+      navigateTo("/profile", { replace: true });
+    }
+  }, [user]);
 
   useEffect(() => {
     setTimeout(() => setFadeIn(true), 100);
   }, []);
 
-  const handleNext = () => {
-    if (!fullName.trim()) return alert("Please enter your full name");
+  const handleNextName = () => {
+    if (!fullName.trim()) {
+      alert("Please enter your full name");
+      return;
+    }
     mmkvStorage.setItem("userFullName", fullName);
     setStep("phone");
   };
 
-  
-const handleAuth = async () => {
-  setLoading(true);
+  const handleNextPhone = () => {
+    if (phoneNumber.length !== 10) {
+      alert("Enter valid mobile number");
+      return;
+    }
+    setStep("email");
+  };
 
-  try {
-    clearAuthStorage();
+  const handleSendEmailOtp = async () => {
+    setLoading(true);
+    try {
+      await sendEmailOtp(email);
+      setStep("emailOtp");
+    } catch {
+      alert("Failed to send email OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const res = await customerLogin(phoneNumber, fullName);
+  const handleVerifyOtp = async () => {
+    setLoading(true);
+    try {
+      clearAuthStorage();
 
-    setAccessToken(res.accessToken);
-    setRefreshToken(res.refreshToken);
+      const res = await verifyEmailOtpAndLogin({
+        fullName,
+        phoneNumber,
+        email,
+        otp: emailOtp,
+      });
 
-    setUser(res.customer);
-    setUserStorage(res.customer);
+      setAccessToken(res.accessToken);
+      setRefreshToken(res.refreshToken);
+      setUser(res.customer);
+      setUserStorage(res.customer);
 
-    navigateTo("/profile", { replace: true });
-  } catch (err) {
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+      navigateTo("/profile", { replace: true });
+    } catch {
+      alert("Invalid OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   return (
@@ -71,14 +106,17 @@ const handleAuth = async () => {
         }}
       >
         <h1 style={styles.logo}>PALTAN</h1>
+
         <p style={styles.subtitle}>
           Delivering daily essentials faster than ever ⚡
         </p>
 
         <div style={styles.content}>
-          {step === "name" ? (
+        
+          {step === "name" && (
             <>
               <h2 style={styles.heading}>Let’s get to know you 👋</h2>
+
               <input
                 type="text"
                 placeholder="Enter your full name"
@@ -86,16 +124,21 @@ const handleAuth = async () => {
                 onChange={(e) => setFullName(e.target.value)}
                 style={styles.input}
               />
+
               <CustomButton
                 disable={!fullName.trim()}
                 loading={loading}
                 title="Next ➝"
-                onPress={handleNext}
+                onPress={handleNextName}
               />
             </>
-          ) : (
+          )}
+
+          
+          {step === "phone" && (
             <>
               <h2 style={styles.heading}>Enter your phone number 📱</h2>
+
               <div style={styles.phoneInput}>
                 <span style={styles.prefix}>+91</span>
                 <input
@@ -109,46 +152,68 @@ const handleAuth = async () => {
                   style={styles.input}
                 />
               </div>
+
               <CustomButton
                 disable={phoneNumber.length !== 10}
                 loading={loading}
-                title="Continue"
-                onPress={handleAuth}
+                title="Next ➝"
+                onPress={handleNextPhone}
+              />
+            </>
+          )}
+
+          {/* EMAIL */}
+          {step === "email" && (
+            <>
+              <h2 style={styles.heading}>Verify your email 📧</h2>
+
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={styles.input}
+              />
+
+              <CustomButton
+                disable={!email.includes("@")}
+                loading={loading}
+                title="Send Email OTP"
+                onPress={handleSendEmailOtp}
+              />
+            </>
+          )}
+
+          {step === "emailOtp" && (
+            <>
+              <h2 style={styles.heading}>Enter Email OTP 🔐</h2>
+
+              <input
+                type="tel"
+                maxLength={6}
+                value={emailOtp}
+                placeholder="6-digit OTP"
+                onChange={(e) =>
+                  setEmailOtp(e.target.value.replace(/\D/g, ""))
+                }
+                style={styles.input}
+              />
+
+              <CustomButton
+                disable={emailOtp.length !== 6}
+                loading={loading}
+                title="Verify & Continue"
+                onPress={handleVerifyOtp}
               />
             </>
           )}
         </div>
-
-        <p style={styles.terms}>
-          By continuing, you agree to our{" "}
-          <span
-            style={styles.link}
-            onClick={() =>
-              navigateTo("/LegalInformationScreen", {
-                state: { title: "Terms & Conditions" },
-              })
-            }
-          >
-            Terms of Service
-          </span>{" "}
-          &{" "}
-          <span
-            style={styles.link}
-            onClick={() =>
-              navigateTo("/LegalInformationScreen", {
-                state: { title: "Privacy Policy" },
-              })
-            }
-          >
-            Privacy Policy
-          </span>
-        </p>
       </div>
     </div>
   );
 };
 
-/* -------------------------- STYLES -------------------------- */
+
 const styles: Record<string, React.CSSProperties> = {
   wrapper: {
     minHeight: "100vh",
@@ -159,11 +224,11 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 20,
   },
   card: {
-    background: "rgba(255, 255, 255, 0.1)",
+    background: "rgba(255,255,255,0.1)",
     backdropFilter: "blur(20px)",
     borderRadius: 16,
-    boxShadow: "0 8px 30px rgba(0, 0, 0, 0.3)",
-    color: "white",
+    boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
+    color: "#fff",
     width: "90%",
     maxWidth: 380,
     padding: "35px 25px",
@@ -173,7 +238,6 @@ const styles: Record<string, React.CSSProperties> = {
   logo: {
     fontSize: 36,
     letterSpacing: 1.5,
-    fontFamily: "Poppins, sans-serif",
     background: "linear-gradient(to right, #ff9966, #ff5e62)",
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
@@ -195,15 +259,14 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 14,
   },
   input: {
-    width: "90%",
-    padding: "7px 10px",
+    width: "100%",
+    padding: "8px 10px",
     borderRadius: 8,
     border: "1px solid rgba(255,255,255,0.25)",
-    backgroundColor: "rgba(168, 109, 109, 0.1)",
+    background: "rgba(255,255,255,0.1)",
     color: "#fff",
     fontSize: 15,
     outline: "none",
-    transition: "all 0.3s ease",
   },
   phoneInput: {
     display: "flex",
@@ -214,19 +277,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 15,
     opacity: 0.8,
   },
-  terms: {
-    marginTop: 25,
-    fontSize: 13,
-    color: "rgba(255,255,255,0.7)",
-    lineHeight: "1.5em",
-  },
-  link: {
-    textDecoration: "underline",
-    color: "#FF7E7E",
-    cursor: "pointer",
-  },
 };
 
 export default CustomerLogin;
-
-
