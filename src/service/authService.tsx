@@ -2,9 +2,7 @@ import axios from "axios";
 import { BASE_URL } from "./config";
 import { appAxios } from "./apilnterceptors";
 
-/* =====================================================
-   UPDATE USER (LOCAL ONLY – UI SMOOTHNESS)
-===================================================== */
+
 export const updateUserLocation = (
   updateData: {
     liveLocation?: any;
@@ -35,22 +33,33 @@ export const updateUserLocation = (
 };
 
 
-export const customerLogin = async (phone: string, fullName: string) => {
-  const response = await axios.post(`${BASE_URL}/customer/login`, {
-    phone,
-    fullName,
+export const sendEmailOtp = async (email: string) => {
+  if (!email) throw new Error("Email required");
+
+  await axios.post(`${BASE_URL}/auth/send-email-otp`, {
+    email,
   });
+};
+
+
+export const verifyEmailOtpAndLogin = async (payload: {
+  fullName: string;
+  phoneNumber: string;
+  email: string;
+  otp: string;
+}) => {
+  const response = await axios.post(
+    `${BASE_URL}/auth/verify-email-otp`,
+    payload
+  );
 
   const { accessToken, refreshToken, customer } = response.data;
 
-  // 🔐 store tokens
+  
   localStorage.setItem("accessToken", accessToken);
   localStorage.setItem("refreshToken", refreshToken);
-
-  // 🧠 store user
   localStorage.setItem("user", JSON.stringify(customer));
 
-  // ✅ RETURN EVERYTHING
   return {
     accessToken,
     refreshToken,
@@ -59,9 +68,29 @@ export const customerLogin = async (phone: string, fullName: string) => {
 };
 
 
-/* =====================================================
-   REFRESH TOKEN (SILENT – APP STYLE)
-===================================================== */
+
+export const customerLogin = async (phone: string, fullName: string) => {
+  const response = await axios.post(`${BASE_URL}/customer/login`, {
+    phone,
+    fullName,
+  });
+
+  const { accessToken, refreshToken, customer } = response.data;
+
+
+  localStorage.setItem("accessToken", accessToken);
+  localStorage.setItem("refreshToken", refreshToken);
+
+  localStorage.setItem("user", JSON.stringify(customer));
+
+  return {
+    accessToken,
+    refreshToken,
+    customer,
+  };
+};
+
+
 export const refresh_tokens = async (): Promise<string | null> => {
   try {
     const refreshToken = localStorage.getItem("refreshToken");
@@ -83,15 +112,12 @@ export const refresh_tokens = async (): Promise<string | null> => {
 
     return accessToken;
   } catch (error) {
-    // 🔴 DO NOT ALERT HERE (interceptor will handle logout)
     console.warn("🔴 Token refresh failed:", error);
     return null;
   }
 };
 
-/* =====================================================
-   FETCH USER (ON APP LOAD / RELOAD)
-===================================================== */
+
 export const refetchUser = async (setUser: (u: any) => void) => {
   try {
     const response = await appAxios.get("/user");
