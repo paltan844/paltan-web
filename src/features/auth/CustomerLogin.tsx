@@ -1,4 +1,4 @@
-
+/*
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CustomButton from "@components/ui/CustomButton";
@@ -212,6 +212,214 @@ const CustomerLogin: React.FC = () => {
     </div>
   );
 };
+*/
+
+
+import React, { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import CustomButton from "@components/ui/CustomButton";
+import { useAuthStore } from "@state/authStore";
+import { mmkvStorage } from "@state/storage";
+import {
+  clearAuthStorage,
+  setAccessToken,
+  setRefreshToken,
+  setUserStorage,
+} from "@utils/webAuthStorage";
+import {
+  sendEmailOtp,
+  verifyEmailOtpAndLogin,
+} from "@service/authService";
+
+const CustomerLogin: React.FC = () => {
+  const navigateTo = useNavigate();
+  const location = useLocation();
+  const { setUser, user } = useAuthStore();
+
+  // 🔥 READ REDIRECT PARAM
+  const params = new URLSearchParams(location.search);
+  const redirectTo = params.get("redirect") || "profile";
+
+  const [step, setStep] = useState<
+    "name" | "phone" | "email" | "emailOtp"
+  >("name");
+
+  const [fullName, setFullName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [emailOtp, setEmailOtp] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [fadeIn, setFadeIn] = useState(false);
+
+  // ❌ REMOVE AUTO PROFILE REDIRECT
+  // useEffect(() => {
+  //   if (user && user._id) {
+  //     navigateTo("/profile", { replace: true });
+  //   }
+  // }, [user]);
+
+  useEffect(() => {
+    setTimeout(() => setFadeIn(true), 100);
+  }, []);
+
+  const handleNextName = () => {
+    if (!fullName.trim()) {
+      alert("Please enter your full name");
+      return;
+    }
+    mmkvStorage.setItem("userFullName", fullName);
+    setStep("phone");
+  };
+
+  const handleNextPhone = () => {
+    if (phoneNumber.length !== 10) {
+      alert("Enter valid mobile number");
+      return;
+    }
+    setStep("email");
+  };
+
+  const handleSendEmailOtp = async () => {
+    setLoading(true);
+    try {
+      await sendEmailOtp(email);
+      setStep("emailOtp");
+    } catch {
+      alert("Failed to send email OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    setLoading(true);
+    try {
+      clearAuthStorage();
+
+      const res = await verifyEmailOtpAndLogin({
+        fullName,
+        phoneNumber,
+        email,
+        otp: emailOtp,
+      });
+
+      setAccessToken(res.accessToken);
+      setRefreshToken(res.refreshToken);
+      setUser(res.customer);
+      setUserStorage(res.customer);
+
+      // ✅ RESPECT REDIRECT
+      navigateTo(`/${redirectTo}`, { replace: true });
+    } catch {
+      alert("Invalid OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={styles.wrapper}>
+      <div
+        style={{
+          ...styles.card,
+          opacity: fadeIn ? 1 : 0,
+          transform: fadeIn ? "translateY(0)" : "translateY(20px)",
+        }}
+      >
+        <h1 style={styles.logo}>PALTAN</h1>
+
+        <p style={styles.subtitle}>
+          Delivering daily essentials faster than ever ⚡
+        </p>
+
+        <div style={styles.content}>
+          {step === "name" && (
+            <>
+              <h2 style={styles.heading}>Let’s get to know you 👋</h2>
+              <input
+                type="text"
+                placeholder="Enter your full name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                style={styles.input}
+              />
+              <CustomButton
+                disable={!fullName.trim()}
+                loading={loading}
+                title="Next ➝"
+                onPress={handleNextName}
+              />
+            </>
+          )}
+
+          {step === "phone" && (
+            <>
+              <h2 style={styles.heading}>Enter your phone number 📱</h2>
+              <input
+                type="tel"
+                maxLength={10}
+                value={phoneNumber}
+                placeholder="10-digit number"
+                onChange={(e) =>
+                  setPhoneNumber(e.target.value.replace(/\D/g, ""))
+                }
+                style={styles.input}
+              />
+              <CustomButton
+                disable={phoneNumber.length !== 10}
+                loading={loading}
+                title="Next ➝"
+                onPress={handleNextPhone}
+              />
+            </>
+          )}
+
+          {step === "email" && (
+            <>
+              <h2 style={styles.heading}>Verify your email 📧</h2>
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={styles.input}
+              />
+              <CustomButton
+                disable={!email.includes("@")}
+                loading={loading}
+                title="Send Email OTP"
+                onPress={handleSendEmailOtp}
+              />
+            </>
+          )}
+
+          {step === "emailOtp" && (
+            <>
+              <h2 style={styles.heading}>Enter Email OTP 🔐</h2>
+              <input
+                type="tel"
+                maxLength={6}
+                value={emailOtp}
+                placeholder="6-digit OTP"
+                onChange={(e) =>
+                  setEmailOtp(e.target.value.replace(/\D/g, ""))
+                }
+                style={styles.input}
+              />
+              <CustomButton
+                disable={emailOtp.length !== 6}
+                loading={loading}
+                title="Verify & Continue"
+                onPress={handleVerifyOtp}
+              />
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 
 const styles: Record<string, React.CSSProperties> = {
@@ -280,3 +488,4 @@ const styles: Record<string, React.CSSProperties> = {
 };
 
 export default CustomerLogin;
+
