@@ -162,7 +162,7 @@ const CustomerLogin: React.FC = () => {
             </>
           )}
 
-          {/* EMAIL */}
+          
           {step === "email" && (
             <>
               <h2 style={styles.heading}>Verify your email 📧</h2>
@@ -488,4 +488,5 @@ const styles: Record<string, React.CSSProperties> = {
 };
 
 export default CustomerLogin;
+
 
