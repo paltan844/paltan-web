@@ -28,11 +28,15 @@ import InvoiceDownloadScreen from '@features/profile/InvoiceDownloadScreen';
 import AddressDetail from '@components/dashboard/AddressDetail';
 import LiveTracking from '@features/map/LiveTracking';
 import DeliveredOrderDetails from '@features/profile/deliveredOrderDetail';
+import GA4Tracker from "../analytics/ga4Tracker";
 
 
 const Navigation = () => {
   return (
     <HistoryRouter history={navigationRef}>
+
+<GA4Tracker />
+      
       <Routes>
 
     
@@ -67,5 +71,6 @@ const Navigation = () => {
     </HistoryRouter>
   );
 };
+
 
 export default Navigation;
