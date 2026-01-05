@@ -1,6 +1,0 @@
-# ❌ sitemap & robots ko rewrite mat karo
-/sitemap.xml  /sitemap.xml  200
-/robots.txt   /robots.txt   200
-
-# ✅ SPA routes ke liye fallback
-/*  /index.html  200
