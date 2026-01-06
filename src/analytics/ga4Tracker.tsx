@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { navigationRef } from "@utils/NavigationUtils";
+import { useLocation } from "react-router-dom";
 
 declare global {
   interface Window {
@@ -7,24 +7,18 @@ declare global {
   }
 }
 
-const GA_TRACKING_ID = "G-7WB75XS340"; // 🔴 apni GA4 ID daalo
-
 const GA4Tracker = () => {
+  const location = useLocation();
+
   useEffect(() => {
-    if (!navigationRef) return;
-
-    const unlisten = navigationRef.listen(({ location }) => {
-      if (window.gtag) {
-        window.gtag("config", GA_TRACKING_ID, {
-          page_path: location.pathname + location.search,
-        });
-      }
-    });
-
-    return () => {
-      if (unlisten) unlisten();
-    };
-  }, []);
+    if (window.gtag) {
+      window.gtag("event", "page_view", {
+        page_path: location.pathname + location.search,
+        page_location: window.location.href,
+        page_title: document.title,
+      });
+    }
+  }, [location.pathname, location.search]);
 
   return null;
 };
