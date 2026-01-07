@@ -1,0 +1,17 @@
+app.get("/robots.txt", async (req, reply) => {
+  reply
+    .type("text/plain")
+    .send(`User-agent: *
+Allow: /
+
+Sitemap: https://paltanshoppingmall.in/sitemap.xml
+`);
+});
+
+
+
+
+/*
+User-agent: *
+Disallow: /
+*/
