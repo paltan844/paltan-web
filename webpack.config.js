@@ -1,45 +1,24 @@
-const createExpoWebpackConfigAsync = require("@expo/webpack-config");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
-const path = require("path");
+const createExpoWebpackConfigAsync = require('@expo/webpack-config');
+const path = require('path');
 
 module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfigAsync(env, argv);
 
-  // ✅ Inject GA4 into <head>
-  config.plugins = config.plugins.map((plugin) => {
-    if (plugin instanceof HtmlWebpackPlugin) {
-      plugin.options.inject = true;
-      plugin.options.templateParameters = {
-        ...plugin.options.templateParameters,
-        GA_TRACKING_ID: "G-7WB75XS340",
-      };
-    }
-    return plugin;
-  });
-
-  // Add GA script manually
-  config.plugins.push(
-    new HtmlWebpackPlugin({
-      inject: "head",
-      templateContent: ({ htmlWebpackPlugin }) => `
-<!doctype html>
-<html>
-<head>
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-7WB75XS340"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-7WB75XS340', { send_page_view: false });
-</script>
-</head>
-<body>
-  <div id="root"></div>
-</body>
-</html>
-      `,
-    })
-  );
+  // ✅ Ensure proper resolution
+  config.resolve = {
+    ...config.resolve,
+    alias: {
+      ...(config.resolve.alias || {}),
+      // Force real axios import (not treated as asset)
+      axios: path.resolve(__dirname, 'node_modules/axios'),
+    },
+    extensions: ['.web.js', '.web.ts', '.web.tsx', '.js', '.ts', '.tsx', '.json'],
+    fallback: {
+      ...(config.resolve.fallback || {}),
+      fs: false,
+      path: false,
+    },
+  };
 
   return config;
 };
