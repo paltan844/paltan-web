@@ -3,8 +3,12 @@
   "displayName": "Paltan",
   "expo": {
     "platforms": ["ios", "android", "web"],
+
     "web": {
-      "favicon": "./src/assets/icons/favicon.png"
+      "favicon": "./src/assets/icons/favicon.png",
+      "analytics": {
+        "googleAnalyticsId": "G-7WB75XS340"
+      }
     }
   }
 }
