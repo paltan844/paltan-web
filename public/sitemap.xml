@@ -1,47 +1,8 @@
-
-
-import fs from "fs";
-import path from "path";
-
-app.get("/sitemap.xml", async (req, reply) => {
-  const urls = [
-    {
-      loc: "https://paltanshoppingmall.in/",
-      changefreq: "daily",
-      priority: "1.0",
-    },
-  ];
-
-  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-  xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
-
-  for (const url of urls) {
-    xml += `
-  <url>
-    <loc>${url.loc}</loc>
-    <changefreq>${url.changefreq}</changefreq>
-    <priority>${url.priority}</priority>
-  </url>`;
-  }
-
-  xml += `\n</urlset>`;
-
-  reply
-    .header("Content-Type", "application/xml")
-    .send(xml);
-});
-
-
-
-/*
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-
   <url>
     <loc>https://paltanshoppingmall.in/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
-
 </urlset>
-*/
