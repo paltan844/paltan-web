@@ -1,24 +1,24 @@
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { navigationRef } from "@utils/NavigationUtils";
 
-declare global {
-  interface Window {
-    gtag?: (...args: any[]) => void;
-  }
-}
+const GA_TRACKING_ID = "G-7WB75XS340";
 
 const GA4Tracker = () => {
-  const location = useLocation();
-
   useEffect(() => {
-    if (window.gtag) {
-      window.gtag("event", "page_view", {
-        page_path: location.pathname + location.search,
-        page_location: window.location.href,
-        page_title: document.title,
-      });
-    }
-  }, [location.pathname, location.search]);
+    if (!navigationRef?.listen) return;
+
+    const unlisten = navigationRef.listen(({ location }) => {
+      if (window.gtag) {
+        window.gtag("event", "page_view", {
+          page_path: location.pathname + location.search,
+        });
+      }
+    });
+
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, []);
 
   return null;
 };
