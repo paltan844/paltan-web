@@ -1,30 +1,24 @@
-// index.web.js OR index.js (TOP par)
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paltan</title>
 
-// 🔥 GA SAFE INIT
-const loadGA = () => {
-  if (window.gtag) return;
+  <!-- Razorpay -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
 
-  const script1 = document.createElement("script");
-  script1.async = true;
-  script1.src = "https://www.googletagmanager.com/gtag/js?id=G-7WB75XS340";
+<body>
+  <div id="root"></div>
 
-  const script2 = document.createElement("script");
-  script2.innerHTML = `
+  <!-- ✅ Google Analytics (SAFE POSITION) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7WB75XS340"></script>
+  <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
+    function gtag(){ dataLayer.push(arguments); }
     gtag('js', new Date());
     gtag('config', 'G-7WB75XS340');
-  `;
-
-  document.head.appendChild(script1);
-  document.head.appendChild(script2);
-};
-
-loadGA();
-
-// React render
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<App />);
+  </script>
+</body>
+</html>
