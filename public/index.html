@@ -1,44 +1,30 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+// index.web.js OR index.js (TOP par)
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
 
-  <title>Paltan</title>
+// 🔥 GA SAFE INIT
+const loadGA = () => {
+  if (window.gtag) return;
 
-  <!-- Razorpay -->
-  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  const script1 = document.createElement("script");
+  script1.async = true;
+  script1.src = "https://www.googletagmanager.com/gtag/js?id=G-7WB75XS340";
 
-  <!-- ✅ FIXED: correct forward slash paths -->
-  <link rel="manifest" href="/manifest.json" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
-  <link rel="shortcut icon" href="/favicon.ico" />
-
-  <!-- Mobile / PWA Meta -->
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-touch-fullscreen" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="Paltan" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
-  <!-- 🔥 Google Analytics (GA4) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7WB75XS340"></script>
-  <script>
+  const script2 = document.createElement("script");
+  script2.innerHTML = `
     window.dataLayer = window.dataLayer || [];
-    function gtag(){ dataLayer.push(arguments); }
+    function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-7WB75XS340', {
-      send_page_view: true
-    });
-  </script>
+    gtag('config', 'G-7WB75XS340');
+  `;
 
-  <!-- React bundles -->
-  <script defer src="/static/js/64.efafc318.js"></script>
-  <script defer src="/static/js/main.fc125c01.js"></script>
-</head>
+  document.head.appendChild(script1);
+  document.head.appendChild(script2);
+};
 
-<body>
-  <div id="root"></div>
-</body>
-</html>
+loadGA();
+
+// React render
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
