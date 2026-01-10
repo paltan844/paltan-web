@@ -1,6 +1,5 @@
 import React from "react";
 import Navigation from "./src/navigation/Navigation.web";
-import GAListener from "./src/analytics/GAListener";
 
 const App = () => {
   const isMobileOrTablet = window.innerWidth <= 1024;
@@ -19,8 +18,6 @@ const App = () => {
 
   return (
     <div style={styles.container}>
-      {/* 🔥 GA SPA TRACKER */}
-      <GAListener />
 
       {/* App Navigation */}
       <Navigation />
