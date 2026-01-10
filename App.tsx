@@ -1,16 +1,28 @@
 
 import React from 'react';
 import Navigation from './src/navigation/Navigation.web';
+import { useEffect } from "react";
 
 const App = () => {
-  const isMobileOrTablet = window.innerWidth <= 1024; // ✅ mobile + tablet
+  const isMobileOrTablet = window.innerWidth <= 1024;
+
+  // 🔥 GA PAGE VIEW FORCE (desktop + mobile)
+  useEffect(() => {
+    if (window.gtag) {
+      window.gtag("event", "page_view", {
+        page_location: window.location.href,
+        page_path: window.location.pathname,
+        page_title: document.title,
+      });
+    }
+  }, []);
 
   if (!isMobileOrTablet) {
     return (
       <div style={styles.restrictedContainer}>
         <h2 style={styles.title}>🚫 Desktop Not Supported</h2>
         <p style={styles.message}>
-          Please open this app on your <strong>mobile</strong> or <strong>tablet</strong> device.
+          Please open this app on your <strong>mobile</strong> or <strong>tablet</strong>.
         </p>
       </div>
     );
@@ -22,6 +34,7 @@ const App = () => {
     </div>
   );
 };
+
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
