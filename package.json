@@ -11,7 +11,9 @@
     "postinstall": "npx patch-package",
     "create-apk": "cd android && ./gradlew assembleRelease",
     "web": "expo start --web",
-"build:web": "node fix-localstorage.js && EXPO_WEBPACK_CONFIG=./webpack.config.js npx expo export:web && cp public/* web-build/"
+"build:web": "node fix-localstorage.js &&
+EXPO_WEBPACK_CONFIG=./webpack.config.js npx expo export:web &&
+cp public/robots.txt public/sitemap.xml public/google*.html web-build/ 2>/dev/null || true"
   },
   "browser": {
     "axios": "axios/dist/esm/axios.js"
