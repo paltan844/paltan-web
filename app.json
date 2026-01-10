@@ -3,8 +3,20 @@
   "displayName": "Paltan",
   "expo": {
     "platforms": ["ios", "android", "web"],
+
     "web": {
-      "favicon": "./src/assets/icons/favicon.png"
+      "favicon": "./src/assets/icons/favicon.png",
+      "head": {
+        "script": [
+          {
+            "src": "https://www.googletagmanager.com/gtag/js?id=G-7WB75XS340",
+            "async": true
+          },
+          {
+            "innerHTML": "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config','G-7WB75XS340',{send_page_view:true});"
+          }
+        ]
+      }
     }
   }
 }
