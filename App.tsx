@@ -7,7 +7,7 @@ const App = () => {
   return (
     
       <div style={styles.container}>
-         <GAListener />
+         <GA4Tracker />
         <Navigation />
       </div>
     
