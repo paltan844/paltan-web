@@ -1,15 +1,22 @@
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
 const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfigAsync(env, argv);
 
-  // ✅ Ensure proper resolution
+  // 🔥 FORCE Expo to use public/index.html
+  config.plugins = config.plugins.map(plugin => {
+    if (plugin instanceof HtmlWebpackPlugin) {
+      plugin.userOptions.template = path.resolve(__dirname, 'public/index.html');
+    }
+    return plugin;
+  });
+
   config.resolve = {
     ...config.resolve,
     alias: {
       ...(config.resolve.alias || {}),
-      // Force real axios import (not treated as asset)
       axios: path.resolve(__dirname, 'node_modules/axios'),
     },
     extensions: ['.web.js', '.web.ts', '.web.tsx', '.js', '.ts', '.tsx', '.json'],
