@@ -5,7 +5,6 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfigAsync(env, argv);
 
-  // 🔥 FORCE Expo to use public/index.html
   config.plugins = config.plugins.map(plugin => {
     if (plugin instanceof HtmlWebpackPlugin) {
       plugin.userOptions.template = path.resolve(__dirname, 'public/index.html');
