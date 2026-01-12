@@ -3,9 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>Paltan</title>
 
-  <!-- ✅ Google Analytics (MUST be in HEAD) -->
+  <!-- ✅ BRAND / ORGANIZATION SCHEMA -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Paltan",
+    "url": "https://paltanshoppingmall.in",
+    "logo": "https://paltanshoppingmall.in/logo.png",
+    "sameAs": [
+      "https://www.facebook.com/paltan",
+      "https://www.instagram.com/paltan"
+    ]
+  }
+  </script>
+
+  <!-- ✅ Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-7WB75XS340"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -18,6 +34,7 @@
 
   <!-- Razorpay -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
 </head>
 
 <body>
