@@ -16,7 +16,6 @@
             "innerHTML": "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config','G-7WB75XS340',{send_page_view:true});"
           },
 
-          // ✅ BRAND / ORGANIZATION SCHEMA (SEO)
           {
             "type": "application/ld+json",
             "innerHTML": "{ \"@context\": \"https://schema.org\", \"@type\": \"Organization\", \"name\": \"Paltan\", \"url\": \"https://paltanshoppingmall.in\", \"logo\": \"https://paltanshoppingmall.in/logo.png\", \"sameAs\": [\"https://www.facebook.com/paltan\", \"https://www.instagram.com/paltan\"] }"
