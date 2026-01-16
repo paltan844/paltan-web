@@ -173,8 +173,6 @@ export default ProductDashboard;
 
 
 
-
-
 import React, { useEffect, useState, CSSProperties, useRef } from "react";
 import { ArrowUp } from "lucide-react";
 import { Helmet } from "react-helmet-async";
@@ -189,84 +187,116 @@ import { withNetworkHandler } from "@components/common/withNetworkHandler";
 import NoConnectionScreen from "@components/common/NetworkHandler";
 import Content, { ContentRef } from "@components/dashboard/Content";
 
+/* ------------------------------------------------------------------ */
+/* ✅ SEPARATE CONTENT COMPONENT (IMPORTANT FIX) */
+/* ------------------------------------------------------------------ */
+
+const BannerContent: React.FC<{ onRetry: () => void }> = ({ onRetry }) => {
+  const { banners, loading } = useBannerStore();
+
+  if (loading) return <BannerSkeleton />;
+
+  if (!banners.length) {
+    return <NoConnectionScreen onRetry={onRetry} />;
+  }
+
+  return (
+    <>
+      <NoticeBanner items={banners} />
+      <Content />
+
+      <footer style={styles.footer}>
+        <p style={styles.footerMain}>Sab Milta Hai Online 💙</p>
+        <p style={styles.footerCredit}>Developed By Paltan Team</p>
+      </footer>
+    </>
+  );
+};
+
+/* ------------------------------------------------------------------ */
+/* ✅ HOC OUTSIDE COMPONENT (CRITICAL FIX) */
+/* ------------------------------------------------------------------ */
+
+const ContentWithNetwork = withNetworkHandler(
+  ({ onRetry }: { onRetry: () => void }) => (
+    <div style={styles.contentContainer}>
+      <BannerContent onRetry={onRetry} />
+    </div>
+  )
+);
+
+/* ------------------------------------------------------------------ */
+/* 🔥 MAIN COMPONENT */
+/* ------------------------------------------------------------------ */
+
 const ProductDashboard: React.FC = () => {
-  const { banners, loading, fetchBanners, reloadBanners } = useBannerStore();
+  const { fetchBanners, reloadBanners } = useBannerStore();
+
   const [showBackToTop, setShowBackToTop] = useState(false);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const contentRef = useRef<ContentRef>(null);
 
+  /* ✅ Fetch banners once */
   useEffect(() => {
     fetchBanners();
   }, [fetchBanners]);
 
+  /* ✅ SAFE scroll listener (NO BLANK PAGE) */
   useEffect(() => {
-    const scrollContainer = contentRef.current?.scrollRef?.current;
-    if (!scrollContainer) return;
+    const timer = setTimeout(() => {
+      const scrollContainer = contentRef.current?.scrollRef?.current;
+      if (!scrollContainer) return;
 
-    let lastScrollTop = 0;
+      let lastScrollTop = 0;
 
-    const handleScroll = () => {
-      const scrollTop = scrollContainer.scrollTop;
+      const handleScroll = () => {
+        const scrollTop = scrollContainer.scrollTop;
 
-      if (scrollTop < lastScrollTop && scrollTop > 200) {
-        setShowBackToTop(true);
+        if (scrollTop < lastScrollTop && scrollTop > 200) {
+          setShowBackToTop(true);
 
-        if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
-        hideTimeoutRef.current = setTimeout(() => {
+          if (hideTimeoutRef.current) {
+            clearTimeout(hideTimeoutRef.current);
+          }
+
+          hideTimeoutRef.current = setTimeout(() => {
+            setShowBackToTop(false);
+          }, 2000);
+        } else if (scrollTop > lastScrollTop || scrollTop < 200) {
           setShowBackToTop(false);
-        }, 2000);
-      } else if (scrollTop > lastScrollTop || scrollTop < 200) {
-        setShowBackToTop(false);
-      }
+        }
 
-      lastScrollTop = scrollTop;
-    };
+        lastScrollTop = scrollTop;
+      };
 
-    scrollContainer.addEventListener("scroll", handleScroll);
+      scrollContainer.addEventListener("scroll", handleScroll);
+
+      return () => {
+        scrollContainer.removeEventListener("scroll", handleScroll);
+      };
+    }, 0);
 
     return () => {
-      scrollContainer.removeEventListener("scroll", handleScroll);
+      clearTimeout(timer);
       if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
     };
   }, []);
 
   const backToTop = () => {
     const scrollContainer = contentRef.current?.scrollRef?.current;
+
     if (scrollContainer) {
       scrollContainer.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
+
     setShowBackToTop(false);
   };
 
-  const reloadAll = () => reloadBanners();
-
-  const ContentWithNetwork = withNetworkHandler(
-    ({ onRetry }: { onRetry: () => void }) => (
-      <div style={styles.contentContainer}>
-        {loading ? (
-          <BannerSkeleton />
-        ) : banners.length === 0 ? (
-          <NoConnectionScreen onRetry={onRetry} />
-        ) : (
-          <>
-            <NoticeBanner items={banners} />
-            <Content ref={contentRef} />
-
-            <footer style={styles.footer}>
-              <p style={styles.footerMain}>Sab Milta Hai Online 💙</p>
-              <p style={styles.footerCredit}>Developed By Paltan Team</p>
-            </footer>
-          </>
-        )}
-      </div>
-    )
-  );
-
   return (
     <>
-      {/* 🔥 SEO FOR HOME PAGE */}
+      {/* 🔥 SEO (SAFE & CORRECT) */}
       <Helmet>
         <title>Online Grocery Delivery in Prayagraj | Paltan Shopping Mall</title>
         <meta
@@ -276,7 +306,7 @@ const ProductDashboard: React.FC = () => {
         <meta name="robots" content="index, follow" />
       </Helmet>
 
-      {/* 🔍 Hidden H1 for Google (UI safe) */}
+      {/* 🔍 Hidden SEO H1 */}
       <h1 style={{ position: "absolute", left: "-9999px" }}>
         Online Grocery Delivery in Prayagraj – Paltan Shopping Mall
       </h1>
@@ -285,8 +315,10 @@ const ProductDashboard: React.FC = () => {
         <Visuals />
         <AnimatedHeader />
         <SearchBarIcons />
-        <ContentWithNetwork onRetry={reloadAll} />
 
+        <ContentWithNetwork onRetry={reloadBanners} />
+
+        {/* 🔼 Back To Top */}
         <button
           onClick={backToTop}
           style={{
@@ -306,12 +338,14 @@ const ProductDashboard: React.FC = () => {
   );
 };
 
+/* ------------------------------------------------------------------ */
+/* 🎨 STYLES */
+/* ------------------------------------------------------------------ */
 
 const styles: Record<string, CSSProperties> = {
   wrapper: {
     display: "flex",
     flexDirection: "column",
-    alignItems: "stretch",
     width: "100%",
     overflowX: "hidden",
     fontFamily: "Inter, sans-serif",
@@ -319,7 +353,7 @@ const styles: Record<string, CSSProperties> = {
   contentContainer: {
     width: "100%",
     maxWidth: 1200,
-    marginTop: 0.5,
+    margin: "0 auto",
   },
   backToTop: {
     position: "fixed",
@@ -333,7 +367,6 @@ const styles: Record<string, CSSProperties> = {
     padding: "4px 8px",
     display: "flex",
     alignItems: "center",
-    justifyContent: "center",
     gap: 5,
     fontSize: 11,
     cursor: "pointer",
@@ -349,7 +382,6 @@ const styles: Record<string, CSSProperties> = {
     textAlign: "center",
     padding: "20px 16px 40px",
     width: "100%",
-    marginTop: 0,
   },
   footerMain: {
     fontWeight: 700,
@@ -364,4 +396,6 @@ const styles: Record<string, CSSProperties> = {
 };
 
 export default ProductDashboard;
+
+
 
