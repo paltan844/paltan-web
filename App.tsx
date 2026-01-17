@@ -1,4 +1,4 @@
-
+/*
 import React from "react";
 import Navigation from "./src/navigation/Navigation.web";
 import GA4Tracker from "./src/analytics/ga4Tracker";
@@ -19,3 +19,31 @@ const styles: Record<string, React.CSSProperties> = {
 };
 
 export default App;
+*/
+
+
+
+
+import React from "react";
+import { HelmetProvider } from "react-helmet-async";
+import Navigation from "./src/navigation/Navigation.web";
+import GA4Tracker from "./src/analytics/ga4Tracker";
+
+const App = () => {
+  return (
+    <HelmetProvider>
+      <div style={styles.container}>
+        <GA4Tracker />
+        <Navigation />
+      </div>
+    </HelmetProvider>
+  );
+};
+
+const styles: Record<string, React.CSSProperties> = {
+  container: { minHeight: "100vh", backgroundColor: "#fff" },
+};
+
+export default App;
+
+
