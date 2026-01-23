@@ -12,7 +12,7 @@ type AppliedOffer = {
   couponCode: string;
 } | null;
 
-
+/*
 export const estimateBill = async (
   items: CartItem[],
   couponCode: string | null
@@ -29,6 +29,20 @@ export const estimateBill = async (
     return null;
   }
 };
+*/
+
+
+
+export const estimateBill = async (items: any[], couponCode?: string | null) => {
+  const res = await appAxios.post("/estimate", {
+    items,
+    couponCode,
+  });
+
+  return res.data;
+};
+
+
 
 export const createOrder = async (payload: {
   items: CartItem[];
@@ -137,3 +151,4 @@ export const getInvoiceUrlByOrderId = async (orderId: string) => {
   const { data } = await appAxios.get(`/order/${orderId}/invoice`);
   return data;
 };
+
