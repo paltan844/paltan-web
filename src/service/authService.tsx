@@ -90,7 +90,7 @@ export const customerLogin = async (phone: string, fullName: string) => {
   };
 };
 
-
+/*
 export const refresh_tokens = async (): Promise<string | null> => {
   try {
     const refreshToken = localStorage.getItem("refreshToken");
@@ -116,6 +116,34 @@ export const refresh_tokens = async (): Promise<string | null> => {
     return null;
   }
 };
+*/
+
+
+
+export const refresh_tokens = async (): Promise<string | null> => {
+  try {
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (!refreshToken) return null;
+
+    const response = await axios.post(`${BASE_URL}/refresh-token`, {
+      refreshToken,
+    });
+
+    const { accessToken, refreshToken: newRefreshToken } = response.data;
+
+    if (!accessToken) return null;
+
+    localStorage.setItem("accessToken", accessToken);
+    if (newRefreshToken) {
+      localStorage.setItem("refreshToken", newRefreshToken);
+    }
+
+    return accessToken;
+  } catch (error) {
+    console.warn("🔴 Refresh failed", error);
+    return null;
+  }
+};
 
 
 export const refetchUser = async (setUser: (u: any) => void) => {
@@ -134,3 +162,4 @@ export const refetchUser = async (setUser: (u: any) => void) => {
     return null;
   }
 };
+
