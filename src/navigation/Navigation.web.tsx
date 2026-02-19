@@ -126,12 +126,14 @@ const Navigation = () => {
         <Route path="/weardetail" element={<WearDetail />} />
         <Route path="/livetracking" element={<LiveTracking />} />
         
+  <Route path="/return-items" element={<ReturnItemsScreen />} />
+        <Route path="/return-summary" element={<ReturnSummaryScreen />} />
 
        {/* <Route path="/productcategory/:id" element={<ProductCategory />} /> */}
        <Route path="/productcategory/:slug" element={<ProductCategory />} />
        <Route path="/productcategories/:slug" element={<ProductCategories />} />
       {/* <Route path="/productcategories/:id" element={<ProductCategories />} /> */}
-
+     <Route path="/bank-details/:returnId" element={<BankDetailsScreen />}/>
         <Route path="/searchscreen" element={<SearchScreen />} />
         <Route path="/aboutpaltan" element={<AboutPaltan />} />
         <Route path="/customersupport" element={<CustomerSupport />} />
@@ -147,6 +149,7 @@ const Navigation = () => {
 };
 
 export default Navigation;
+
 
 
 
