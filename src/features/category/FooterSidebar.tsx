@@ -631,3 +631,4 @@ const FooterSidebar: React.FC<FooterSidebarProps> = ({
 };
 
 export default FooterSidebar;
+
