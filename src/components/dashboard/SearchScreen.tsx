@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { IoArrowBackOutline, IoClose, IoMicOutline } from "react-icons/io5";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { getAllProducts } from "@service/productService";
 import { Colors } from "@utils/Constants";
 import SearchResults from "./SearchResult";
@@ -11,90 +11,82 @@ const SearchScreen: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [products, setProducts] = useState<any[]>([]);
-  const [page, setPage] = useState(1);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const LIMIT = 20;
+  const LIMIT = 12;
   const navigate = useNavigate();
-  const location = useLocation();
 
   const cartCount = useCartStore(
     (state) => state.cart.reduce((acc, item) => acc + item.count, 0)
   );
 
-  // ✅ Fetch all products
-  const fetchProducts = async (pageNum = 1) => {
+  // ✅ Fetch Products with Cursor + Search
+  const fetchProducts = async (
+    cursor: string | null = null,
+    reset = false
+  ) => {
     try {
-      setLoading(true);
-      const data = await getAllProducts(pageNum, LIMIT);
-      const enriched = data.map((item: any) => ({
-        ...item,
-        categoryId: item?.categoryId?._id || "",
-        navigateTo: item?.categoryId?.navigateTo || "",
-      }));
-      setProducts((prev) => (pageNum === 1 ? enriched : [...prev, ...enriched]));
-      if (enriched.length < LIMIT) setHasMore(false);
+      if (reset) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      const res = await getAllProducts({
+        cursor,
+        limit: LIMIT,
+        search: searchTerm,
+      });
+
+      if (reset) {
+        setResults(res.data);
+      } else {
+        setResults((prev) => [...prev, ...res.data]);
+      }
+
+      setNextCursor(res.nextCursor);
+      setHasMore(res.hasMore);
     } catch (err) {
       console.warn("Error fetching products:", err);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
+  // ✅ When search changes → reset data
   useEffect(() => {
-    fetchProducts(1);
-  }, []);
+    const timer = setTimeout(() => {
+      fetchProducts(null, true);
+    }, 400);
 
-  // ✅ Filter products based on search
-  const filterResults = useCallback(() => {
-    if (!searchTerm.trim()) {
-      setResults(products);
-      return;
-    }
-    const filtered = products
-      .filter((product) =>
-        product.name?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      .sort(
-        (a, b) =>
-          a.name.toLowerCase().indexOf(searchTerm.toLowerCase()) -
-          b.name.toLowerCase().indexOf(searchTerm.toLowerCase())
-      );
-    setResults(filtered);
-  }, [searchTerm, products]);
-
-  useEffect(() => {
-    const timer = setTimeout(filterResults, 300);
     return () => clearTimeout(timer);
-  }, [searchTerm, filterResults]);
-
-  useEffect(() => {
-    setResults(products);
-  }, [products]);
+  }, [searchTerm]);
 
   // ✅ Scroll Pagination
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
-    if (scrollTop + clientHeight >= scrollHeight - 20 && hasMore && !loadingMore) {
-      setLoadingMore(true);
-      fetchProducts(page + 1).then(() => {
-        setPage((prev) => prev + 1);
-        setLoadingMore(false);
-      });
+
+    if (
+      scrollTop + clientHeight >= scrollHeight - 50 &&
+      hasMore &&
+      !loadingMore
+    ) {
+      fetchProducts(nextCursor);
     }
   };
 
-  // ✅ Clear search
   const handleClearSearch = () => {
     setSearchTerm("");
-    setResults(products);
+    setResults([]);
+    setNextCursor(null);
+    setHasMore(true);
   };
 
   return (
     <div style={styles.wrapper}>
-      {/* ✅ Search Bar */}
       <div style={styles.searchHeader}>
         <button onClick={() => navigate(-1)} style={styles.iconButton}>
           <IoArrowBackOutline size={20} color={Colors.text} />
@@ -122,7 +114,6 @@ const SearchScreen: React.FC = () => {
         )}
       </div>
 
-      {/* ✅ Results Section */}
       <div
         style={{
           ...styles.resultsContainer,
@@ -130,14 +121,16 @@ const SearchScreen: React.FC = () => {
         }}
         onScroll={handleScroll}
       >
-        {!loading && searchTerm.trim() && (
+        {searchTerm && !loading && (
           <p style={styles.resultCount}>{results.length} results found</p>
         )}
 
         <SearchResults results={results} loading={loading} numColumns={2} />
 
         {loadingMore && (
-          <p style={{ textAlign: "center", padding: 10 }}>Loading more...</p>
+          <p style={{ textAlign: "center", padding: 10 }}>
+            Loading more...
+          </p>
         )}
       </div>
     </div>
