@@ -153,7 +153,7 @@ export default withNetworkHandlerWithHeader(WithCart(ProductCategories));
 */
 
 
-
+/*
 //slug se phle ka code 
 import { View, StyleSheet } from "react-native";
 import React, { FC, useEffect, useState } from "react";
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
 });
 
 export default withNetworkHandlerWithHeader(WithCart(ProductCategories));
-
+*/
 
 
 /*
@@ -594,4 +594,206 @@ const styles = StyleSheet.create({
 });
 
 export default withNetworkHandlerWithHeader(WithCart(ProductCategories));
+
 */
+
+
+import { View, StyleSheet } from "react-native";
+import React, { FC, useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+
+import CustomHeader from "@components/ui/CustomHeader";
+import Sidebar from "./Sidebar";
+import {
+  getAllCategoriesByMainCategoryId,
+  getProductByCategoryIdByMainId,
+} from "@service/productService";
+import ProductList from "./ProductList";
+import WithCart from "@features/cart/WithCart";
+import SidebarSkeleton from "./SidebarSkeleton";
+import NoConnectionScreen from "@components/common/NetworkHandler";
+import { withNetworkHandlerWithHeader } from "@components/common/withNetworkHandler";
+import ProductLoader from "./ProductLoader";
+
+interface Props {
+  isConnected?: boolean;
+  onRetry?: () => void;
+}
+
+const CITY = "Prayagraj";
+
+const ProductCategories: FC<Props> = ({ isConnected, onRetry }) => {
+  const { state } = useLocation();
+  const passedCategory = state?.category;
+  const mainCategory = state?.mainCategory;
+
+  const [categories, setCategories] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<any>(null);
+
+  const [products, setProducts] = useState<any[]>([]);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  /* ================= FETCH CATEGORIES ================= */
+
+  const fetchCategories = async () => {
+    try {
+      setCategoriesLoading(true);
+
+      const data = await getAllCategoriesByMainCategoryId(mainCategory?.id);
+      setCategories(data || []);
+
+      if (data?.length) {
+        const matched = data.find(
+          (cat: any) => cat._id === passedCategory?._id
+        );
+        setSelectedCategory(matched || data[0]);
+      }
+    } catch (err) {
+      console.warn("❌ Error Fetching Categories", err);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (mainCategory?.id) fetchCategories();
+  }, [mainCategory]);
+
+  /* ================= FETCH PRODUCTS ================= */
+
+  const fetchProducts = async (
+    categoryId: string,
+    newCursor: string | null = null,
+    isLoadMore = false
+  ) => {
+    try {
+      isLoadMore ? setLoadingMore(true) : setProductsLoading(true);
+
+      const res = await getProductByCategoryIdByMainId(
+        categoryId,
+        newCursor,
+        12
+      );
+
+      const newProducts = res?.data || [];
+
+      setProducts((prev) =>
+        isLoadMore ? [...prev, ...newProducts] : newProducts
+      );
+
+      setCursor(res?.nextCursor || null);
+      setHasMore(Boolean(res?.nextCursor));
+    } catch (error) {
+      console.warn("❌ Error Fetching Products", error);
+    } finally {
+      isLoadMore ? setLoadingMore(false) : setProductsLoading(false);
+    }
+  };
+
+  /* ================= RESET ON CATEGORY CHANGE ================= */
+
+  useEffect(() => {
+    if (!selectedCategory?._id) return;
+
+    // reset everything
+    setProducts([]);
+    setCursor(null);
+    setHasMore(true);
+
+    fetchProducts(selectedCategory._id);
+  }, [selectedCategory]);
+
+  const categoryName =
+    selectedCategory?.name || passedCategory?.name || "Online Grocery";
+
+  return (
+    <>
+      <Helmet>
+        <title>
+          Buy {categoryName} Online in {CITY} | Paltan Shopping Mall
+        </title>
+      </Helmet>
+
+      <View style={styles.mainContainer}>
+        <CustomHeader title={categoryName} search />
+
+        {!isConnected ? (
+          <NoConnectionScreen onRetry={onRetry || fetchCategories} />
+        ) : (
+          <View style={styles.subContainer}>
+            {/* SIDEBAR */}
+            <View style={styles.sidebarWrapper}>
+              {categoriesLoading ? (
+                <SidebarSkeleton />
+              ) : (
+                <Sidebar
+                  categories={categories}
+                  selectedCategory={selectedCategory}
+                  onCategoryPress={(cat: any) =>
+                    setSelectedCategory(cat)
+                  }
+                />
+              )}
+            </View>
+
+            {/* PRODUCTS */}
+            <View style={styles.productsContainer}>
+              {productsLoading ? (
+                <ProductLoader />
+              ) : (
+                <ProductList
+                  data={products}
+                  categoryId={selectedCategory?._id}
+                  hasMore={hasMore}
+                  loadingMore={loadingMore}
+                  onEndReached={() => {
+                    if (
+                      hasMore &&
+                      !loadingMore &&
+                      selectedCategory?._id
+                    ) {
+                      fetchProducts(
+                        selectedCategory._id,
+                        cursor,
+                        true
+                      );
+                    }
+                  }}
+                />
+              )}
+            </View>
+          </View>
+        )}
+      </View>
+    </>
+  );
+};
+
+export default withNetworkHandlerWithHeader(
+  WithCart(ProductCategories)
+);
+
+const styles = StyleSheet.create({
+  mainContainer: {
+    flex: 1,
+    backgroundColor: "white",
+  },
+  subContainer: {
+    flexDirection: "column",
+    flex: 1,
+  },
+  sidebarWrapper: {
+    width: "100%",
+    backgroundColor: "#f8f8f8",
+  },
+  productsContainer: {
+    flex: 1,
+    width: "100%",
+  },
+});
