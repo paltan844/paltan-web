@@ -253,7 +253,7 @@ export default withNetworkHandlerWithHeader(
 
 
 
-
+/*
 import React, { FC, useState, useRef, useCallback, useEffect } from "react";
 import {
   View,
@@ -373,7 +373,7 @@ const Kart: FC<Props> = ({ isConnected, onRetry }) => {
 
   return (
     <>
-      {/* 🔐 SEO (SAFE – NON INDEX INTENT PAGE) */}
+      {/* 🔐 SEO (SAFE – NON INDEX INTENT PAGE) /}
       <Helmet>
         <title>Your Orders & Cart | Paltan Shopping Mall</title>
 
@@ -385,7 +385,7 @@ const Kart: FC<Props> = ({ isConnected, onRetry }) => {
         <meta name="robots" content="noindex, nofollow" />
         <link rel="canonical" href={pageUrl} />
 
-        {/* Optional Schema */}
+        {/* Optional Schema /}
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
@@ -401,7 +401,7 @@ const Kart: FC<Props> = ({ isConnected, onRetry }) => {
         </script>
       </Helmet>
 
-      {/* 🔎 Invisible SEO helper (Blinkit style) */}
+      {/* 🔎 Invisible SEO helper (Blinkit style) /}
       <div
         style={{
           position: "absolute",
@@ -415,7 +415,7 @@ const Kart: FC<Props> = ({ isConnected, onRetry }) => {
         User cart and order history page for Paltan Shopping Mall in {CITY}
       </div>
 
-      {/* -------- UI (UNCHANGED) -------- */}
+      {/* -------- UI (UNCHANGED) -------- /}
       <View style={styles.mainContainer}>
         <CustomHeader title="Kart" search />
 
@@ -510,6 +510,273 @@ const styles = StyleSheet.create({
     color: "#92400e",
     marginBottom: 2,
   },
+  otpCode: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#b45309",
+  },
+});
+
+export default withNetworkHandlerWithHeader(
+  withLiveStatus(WithCart(Kart))
+);
+*/
+
+
+
+import React, { FC, useState, useRef, useCallback, useEffect } from "react";
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  Text,
+  Platform,
+  ScrollView,
+  Alert,
+} from "react-native";
+import { Helmet } from "react-helmet-async";
+
+import CustomHeader from "@components/ui/CustomHeader";
+import WithCart from "@features/cart/WithCart";
+import withLiveStatus from "@features/map/withLiveStatus";
+import { withNetworkHandlerWithHeader } from "@components/common/withNetworkHandler";
+import EmptyProductList from "@features/category/EmptyProductList";
+import OrderItem from "@features/profile/OrderItem";
+import OrderListSkeleton from "@features/profile/OrderListSkeleton";
+import NoConnectionScreen from "@components/common/NetworkHandler";
+import { useAuthStore } from "@state/authStore";
+import { fetchCustomerOrdersNeeds } from "@service/orderService";
+import { navigate } from "@utils/NavigationUtils";
+
+interface Props {
+  isConnected?: boolean;
+  onRetry?: () => void;
+}
+
+const PAGE_LIMIT = 10;
+
+const Kart: FC<Props> = ({ isConnected, onRetry }) => {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState<boolean>(false);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
+  const [page, setPage] = useState<number>(1);
+  const [hasMore, setHasMore] = useState<boolean>(true);
+
+  const { user } = useAuthStore();
+  const hasFocusedOnce = useRef(false);
+
+  const CITY = "Prayagraj";
+  const pageUrl =
+    typeof window !== "undefined"
+      ? window.location.href
+      : "https://paltanshoppingmall.in/kart";
+
+  /* =========================
+     FETCH ORDERS (PAGINATED)
+  ========================== */
+
+  const fetchOrders = async (
+    pageNumber = 1,
+    isLoadMore = false
+  ) => {
+    try {
+      if (!user || !user._id) {
+        setOrders([]);
+        Alert.alert(
+          "Login Required",
+          "Please login to view your orders.",
+          [{ text: "OK", onPress: () => navigate("/login") }]
+        );
+        return;
+      }
+
+      isLoadMore ? setLoadingMore(true) : setOrdersLoading(true);
+
+      const res = await fetchCustomerOrdersNeeds(
+        pageNumber,
+        PAGE_LIMIT
+      );
+
+      const newOrders = res?.data || [];
+
+      setOrders((prev) =>
+        isLoadMore ? [...prev, ...newOrders] : newOrders
+      );
+
+      setHasMore(res?.hasMore);
+      setPage(pageNumber);
+    } catch (error: any) {
+      if (error?.response?.status === 401) {
+        Alert.alert("Login Required", "Session expired.", [
+          { text: "Login", onPress: () => navigate("/login") },
+        ]);
+      } else {
+        Alert.alert("Error", "Unable to load orders.");
+      }
+    } finally {
+      isLoadMore ? setLoadingMore(false) : setOrdersLoading(false);
+    }
+  };
+
+  /* =========================
+     INITIAL LOAD
+  ========================== */
+
+  useEffect(() => {
+    if (Platform.OS === "web") {
+      fetchOrders(1, false);
+    }
+  }, [user?._id]);
+
+  if (Platform.OS !== "web") {
+    const { useFocusEffect } = require("@react-navigation/native");
+    useFocusEffect(
+      useCallback(() => {
+        if (!hasFocusedOnce.current) {
+          fetchOrders(1, false);
+          hasFocusedOnce.current = true;
+        }
+        return () => {
+          hasFocusedOnce.current = false;
+        };
+      }, [user?._id])
+    );
+  }
+
+  /* =========================
+     RENDER ORDER
+  ========================== */
+
+  const renderOrders = ({ item, index }: any) => {
+    const handlePress = () => {
+      if (item.status === "delivered") {
+        useAuthStore.getState().setCurrentOrder(item);
+        navigate("/deliveredorderdetails");
+      }
+    };
+
+    return (
+      <OrderItem
+        item={item}
+        index={index}
+        onPress={item.status === "delivered" ? handlePress : undefined}
+      />
+    );
+  };
+
+  const activeOrders = (orders || []).filter(
+    (o: any) => o.status !== "delivered" && o.otp
+  );
+
+  const renderOtp = ({ item }: any) => (
+    <View style={styles.otpCard}>
+      <Text style={styles.otpLabel}>Order #{item.orderId}</Text>
+      <Text style={styles.otpCode}>{item.otp}</Text>
+    </View>
+  );
+
+  return (
+    <>
+      <Helmet>
+        <title>Your Orders & Cart | Paltan Shopping Mall</title>
+        <meta name="robots" content="noindex, nofollow" />
+        <link rel="canonical" href={pageUrl} />
+      </Helmet>
+
+      <View style={styles.mainContainer}>
+        <CustomHeader title="Kart" search />
+
+        {!isConnected ? (
+          <NoConnectionScreen onRetry={onRetry} />
+        ) : ordersLoading ? (
+          <OrderListSkeleton />
+        ) : orders.length > 0 ? (
+          <>
+            {activeOrders.length > 0 && (
+              <View style={styles.otpContainer}>
+                <Text style={styles.otpHeader}>Active Order OTPs</Text>
+                <FlatList
+                  data={activeOrders}
+                  keyExtractor={(item: any) => item.orderId}
+                  renderItem={renderOtp}
+                  scrollEnabled={false}
+                />
+              </View>
+            )}
+
+            <FlatList
+              data={orders}
+              renderItem={renderOrders}
+              keyExtractor={(item: any) => item.orderId}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollViewContent}
+              onEndReached={() => {
+                if (hasMore && !loadingMore) {
+                  fetchOrders(page + 1, true);
+                }
+              }}
+              onEndReachedThreshold={0.4}
+              ListFooterComponent={
+                loadingMore ? (
+                  <Text style={{ textAlign: "center", padding: 10 }}>
+                    Loading more...
+                  </Text>
+                ) : null
+              }
+            />
+          </>
+        ) : (
+          <ScrollView
+            contentContainerStyle={styles.emptyContainer}
+          >
+            <Text style={styles.text}>Book your first order</Text>
+            <EmptyProductList />
+          </ScrollView>
+        )}
+      </View>
+    </>
+  );
+};
+
+const styles = StyleSheet.create({
+  mainContainer: { flex: 1, backgroundColor: "white" },
+  scrollViewContent: { padding: 1, paddingBottom: 40 },
+  text: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "rgba(17,17,18,0.3)",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  emptyContainer: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  otpContainer: {
+    backgroundColor: "#fef3c7",
+    marginHorizontal: 12,
+    marginTop: 8,
+    borderRadius: 10,
+    padding: 12,
+  },
+  otpHeader: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#92400e",
+    marginBottom: 6,
+    textAlign: "center",
+  },
+  otpCard: {
+    backgroundColor: "#fff7ed",
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#fdba74",
+    marginBottom: 6,
+  },
+  otpLabel: { fontSize: 13, color: "#92400e" },
   otpCode: {
     fontSize: 18,
     fontWeight: "bold",
@@ -759,4 +1026,5 @@ const styles = StyleSheet.create({
 export default withNetworkHandlerWithHeader(
   withLiveStatus(WithCart(Kart))
 );
+
 */
