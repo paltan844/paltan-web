@@ -143,7 +143,7 @@ export const getInvoiceUrlByOrderId = async (orderId: string) => {
 };
 */
 
-
+/*
 import { appAxios } from "./apilnterceptors";
 
 type CartItem = {
@@ -207,7 +207,7 @@ export const estimateBill = async (
 
   return res.data;
 };
-*/
+/
 
 
 export const createOrder = async (payload: {
@@ -317,6 +317,124 @@ export const getInvoiceUrlByOrderId = async (orderId: string) => {
   const { data } = await appAxios.get(`/order/${orderId}/invoice`);
   return data;
 };
+*/
+
+
+export const createOrder = async (payload: {
+  items: CartItem[];
+  branch: string;
+  deliveryAddress: Record<string, any>;
+  couponCode: string | null;
+}) => {
+  try {
+    const response = await appAxios.post("/order", {
+      items: payload.items,
+      branch: '686e910cba6c97c2a5301768',
+      deliveryAddress: payload.deliveryAddress,
+      couponCode: payload.couponCode,
+    });
+
+    return response.data;
+  } catch (err) {
+    console.warn("Create Order Error", err);
+    return null;
+  }
+};
+
+export const getOrderById = async (id: string) => {
+  try {
+    const response = await appAxios.get(`/order/${id}`);
+    return response.data;
+
+  } catch (err) {
+    console.warn("Fetch Order Error", err);
+    return null;
+  }
+};
+
+
+export const fetchCustomerOrders = async () => {
+  try {
+    const response = await appAxios.get("/order");
+    return response.data;
+  } catch (err) {
+    console.warn("❌ Fetch Customer Orders Error", err);
+    return null;
+  }
+};
+
+
+export const fetchCustomerOrdersNeeds = async (
+  page = 1,
+  limit = 10
+) => {
+  try {
+    const response = await appAxios.get(
+      `/orderNeed?page=${page}&limit=${limit}`
+    );
+
+    return response.data;
+  } catch (err) {
+    console.warn("❌ Fetch Customer OrderNeed Error", err);
+    return { data: [], hasMore: false };
+  }
+};
+
+export const fetchOrders = async (
+  status: string,
+  userId: string,
+  branchId: string
+) => {
+  let uri =
+    status === "available"
+      ? `/order?status=${status}&branchId=${branchId}`
+      : `/order?branchId=${branchId}&deliverypartnerId=${userId}&status=delivered`;
+
+  try {
+    const response = await appAxios.get(uri);
+    return response.data;
+  } catch (err) {
+    console.warn("Fetch Delivery Order Error", err);
+    return null;
+  }
+};
+
+
+
+export const sendLiveOrderUpdates = async (
+  id: string,
+  location: any,
+  status: string
+) => {
+  try {
+    const response = await appAxios.patch(`/order/${id}/status`, {
+      deliveryPersonLocation: location,
+      status,
+    });
+    return response.data;
+  } catch (err) {
+    console.warn("sendLiveOrderUpdates Error", err);
+    return null;
+  }
+};
+
+export const confirmOrder = async (id: string, location: any) => {
+  try {
+    const response = await appAxios.post(`/order/${id}/confirm`, {
+      deliveryPersonLocation: location,
+    });
+    return response.data;
+  } catch (err) {
+    console.warn("confirmOrder Error", err);
+    return null;
+  }
+};
+
+export const getInvoiceUrlByOrderId = async (orderId: string) => {
+  const { data } = await appAxios.get(`/order/${orderId}/invoice`);
+  return data;
+};
+
 
 
 
