@@ -421,7 +421,7 @@ useEffect(() => {
       alignItems: "center",
     }}
   >
-    {/* LEFT SIDE */}
+    {/* LEFT SIDE /}
     <View style={{ flexDirection: "column" }}>
 
       {/* PAY USING + ARROW IN SAME ROW /}
@@ -1218,3 +1218,4 @@ const styles = StyleSheet.create({
 });
 
 export default ProductOrder;
+
