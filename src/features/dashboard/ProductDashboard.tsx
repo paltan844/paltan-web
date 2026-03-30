@@ -122,7 +122,7 @@ const ProductDashboard: React.FC = () => {
                     ...(isDesktop && styles.desktopFooterCredit),
                   }}
                 >
-                  Developed By Paltan Team
+                  Developed By Paltan Teams
                 </p>
               </div>
             </footer>
